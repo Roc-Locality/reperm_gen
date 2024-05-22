@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 use std::collections::HashSet;
-use crate::group::group::{Group, GroupIter};
+use crate::group::group::{Group};
 use crate::group::cycle::Cycle;
 
 #[derive(Default)]
@@ -10,7 +10,9 @@ pub struct SymmetricGroup<V> {
     phantom: PhantomData<V>
 }
 
-impl<V> Group<Cycle<V>> for SymmetricGroup<Cycle<V>> {
+impl<V> Group<Cycle<V>> for SymmetricGroup<Cycle<V>> 
+where V: Copy
+{
     fn get_set(&self) -> HashSet<Cycle<V>> {
         todo!()
     }

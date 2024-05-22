@@ -1,26 +1,24 @@
 use std::ops::Mul;
 
 ///For permutations
-pub struct Cycle<T> {
+#[derive(Clone, Copy)]
+pub struct Cycle<T: Copy> {
     /// data = [1, 2, 3,], which is a cycle of order 3
     data: Vec<T>,
     ///this is the max cycle size
     n: usize,
 }
 
-impl<T> Cycle<T> 
-where
-    T: Clone
-{
-    fn new(data: Vec<T>) -> Self {
+impl<T: Copy> Cycle<T> {
+    fn new(data: &Vec<T>) -> Self {
         Cycle {
-            data: data,
+            data: data.to_vec(),
             n: data.len(),
         }
     }
 
     fn inverse(&self) -> Self {
-        let co = self.data.to_vec();
+        let mut co = self.data.to_vec();
         co.reverse();
         Cycle {
             data: co,
@@ -29,14 +27,15 @@ where
     }
 }
 
-impl<T> Mul for Cycle<T> {
+impl<T: Copy> Mul for Cycle<T> {
     type Output = Cycle<T>;
 
     fn mul(self, rhs: Self) -> Self::Output {
         todo!()
     }
 }
-impl<T> PartialEq for Cycle<T> {
+
+impl<T: Copy> PartialEq for Cycle<T> {
     fn eq(&self, other: &Self) -> bool {
         todo!()
     }

@@ -5,7 +5,7 @@ use std::collections::HashSet;
 /// Associativity
 /// Identity
 /// Inverse
-pub trait Group<T: PartialEq+Sized> {
+pub trait Group<T: PartialEq+Sized+Copy> {
     fn get_set(&self) -> HashSet<T>;
     fn op(&self, a: T, b: T) -> T;
 
@@ -14,7 +14,7 @@ pub trait Group<T: PartialEq+Sized> {
 
     fn order(&self) -> usize;
     fn get_generator(&self) -> Vec<T>;
-    fn iter(&self, start: T) -> GroupIter<T> where Self: Sized {
+    fn iter(&self, start: T) -> GroupIter<T> where Self: Sized, T: Copy {
         GroupIter::new(start, self)
     }
 }
@@ -25,19 +25,22 @@ struct GroupIter<'a, T> {
     group: &'a dyn Group<T>,
 }
 
-impl<'a, T> GroupIter<'a, T> {
-    fn new(curr: T, group: &dyn Group<T>) -> GroupIter<T> {
+impl<'a, T> GroupIter<'a, T>
+where 
+    T: Copy 
+{
+    fn new(curr: T, group: &'a dyn Group<T>) -> GroupIter<'a, T> {
         GroupIter {
             start: curr,
             curr: curr,
             group: group,
-        } 
+        }
     }
 }
 
 impl<'a, T> Iterator for GroupIter<'a, T> 
 where 
-    T: PartialEq
+    T: PartialEq+Copy
 {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
