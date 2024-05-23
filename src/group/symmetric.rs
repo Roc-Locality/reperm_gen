@@ -39,7 +39,7 @@ where
     }
 
     fn identity(&self) -> Cycle<V> {
-        Cycle::new(Vec::from_iter(self.ground.clone()), self.ground.clone())
+        Cycle::new(vec![], self.ground.clone())
     }
 
     fn inverse(&self, e: Cycle<V>) -> Cycle<V> {
@@ -63,3 +63,4 @@ where
         adj_transpositions
     }
 }
+
