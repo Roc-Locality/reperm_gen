@@ -22,6 +22,6 @@ fn main() {
     //println!("a * b = {:?}", id * rev);
     //println!("rev * nat = {:?}", rev * nat);
     println!("(b * a)(1) = {:?}", (rev * nat).eval(1));
-
+    println!("generator {:?}", group.get_generator());
     println!("Hello, world!");
 }

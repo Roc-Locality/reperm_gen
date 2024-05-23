@@ -22,7 +22,6 @@ where
 {
     pub fn new(data: Vec<T>, ground: Vec<T>) -> Self {
         let mut map: HashMap<T, T> = HashMap::new();
-        data.windows(2);
         
         for window in data.windows(2) {
             let prev = window[0].clone();

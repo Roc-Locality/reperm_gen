@@ -50,7 +50,16 @@ where
         (1..=self.n).product()
     }
 
+    /// In Symmetric Groups, we can generate every single n! possible permutations by only combining and adding adjacent transpositions, ie (a_i, a_{i + 1}) for all i.
     fn get_generator(&self) -> Vec<Cycle<V>> {
-        todo!()
+        let mut adj_transpositions = Vec::new();
+        for window in self.ground.windows(2) {
+            let prev = window[0].clone();
+            let curr = window[1].clone();
+            let adj_t = Cycle::new(vec![prev, curr], self.ground.clone());
+            adj_transpositions.push(adj_t);
+        }
+
+        adj_transpositions
     }
 }
