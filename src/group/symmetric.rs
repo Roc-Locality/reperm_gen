@@ -1,7 +1,8 @@
 use std::hash::Hash;
-use std::ops::Mul;
 use std::collections::HashSet;
-use crate::group::group::{Group};
+use bimap::BiMap;
+
+use crate::group::group::Group;
 use crate::group::cycle::Cycle;
 
 #[derive(Default)]
@@ -39,7 +40,7 @@ where
     }
 
     fn identity(&self) -> Cycle<V> {
-        Cycle::new(vec![], self.ground.clone())
+        Cycle::new(BiMap::new(), self.ground.clone())
     }
 
     fn inverse(&self, e: Cycle<V>) -> Cycle<V> {
@@ -56,7 +57,9 @@ where
         for window in self.ground.windows(2) {
             let prev = window[0].clone();
             let curr = window[1].clone();
-            let adj_t = Cycle::new(vec![prev, curr], self.ground.clone());
+            let mut map = BiMap::new();
+            map.insert(prev, curr);
+            let adj_t = Cycle::new(map, self.ground.clone());
             adj_transpositions.push(adj_t);
         }
 
