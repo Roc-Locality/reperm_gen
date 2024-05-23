@@ -11,13 +11,14 @@ pub struct SymmetricGroup<V> {
 }
 
 impl<V> Group<Cycle<V>> for SymmetricGroup<Cycle<V>> 
-where V: Copy
+where V: Clone+Copy
 {
+    ///For the symmetric group, calling this is not really recommended because it will yield n! elements
     fn get_set(&self) -> HashSet<Cycle<V>> {
         todo!()
     }
 
-    fn op(&self, a: Cycle<V>, b: Cycle<V>) -> Cycle<V> {
+    fn op(&self, a: &Cycle<V>, b: &Cycle<V>) -> Cycle<V> {
         todo!()
     }
 

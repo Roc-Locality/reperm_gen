@@ -1,3 +1,4 @@
+use std::ops::Mul;
 use std::collections::HashSet;
 
 /// A Group is a set system with some set G, the ground set and an arbitrary binary operator +.
@@ -5,16 +6,16 @@ use std::collections::HashSet;
 /// Associativity
 /// Identity
 /// Inverse
-pub trait Group<T: PartialEq+Sized+Copy> {
+pub trait Group<T: PartialEq+Sized+Clone> {
     fn get_set(&self) -> HashSet<T>;
-    fn op(&self, a: T, b: T) -> T;
+    fn op(&self, a: &T, b: &T) -> T;
 
     fn identity(&self) -> T;
     fn inverse(&self, e: T) -> T;
 
     fn order(&self) -> usize;
     fn get_generator(&self) -> Vec<T>;
-    fn iter(&self, start: T) -> GroupIter<T> where Self: Sized, T: Copy {
+    fn iter(&self, start: T) -> GroupIter<T> where Self: Sized, T: Clone {
         GroupIter::new(start, self)
     }
 }
@@ -27,12 +28,12 @@ struct GroupIter<'a, T> {
 
 impl<'a, T> GroupIter<'a, T>
 where 
-    T: Copy 
+    T: Clone 
 {
     fn new(curr: T, group: &'a dyn Group<T>) -> GroupIter<'a, T> {
         GroupIter {
-            start: curr,
-            curr: curr,
+            start: curr.clone(),
+            curr: curr.clone(),
             group: group,
         }
     }
@@ -40,13 +41,13 @@ where
 
 impl<'a, T> Iterator for GroupIter<'a, T> 
 where 
-    T: PartialEq+Copy
+    T: PartialEq+Clone+Mul<&'a T>+Mul<T>
 {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        self.curr = self.group.op(self.curr, self.curr);
+        self.curr = self.group.op(&self.curr, &self.start);
         if self.curr != self.start {
-            Some(self.curr)
+            Some(self.curr.clone())
         } else {
             None
         }
