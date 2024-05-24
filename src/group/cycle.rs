@@ -136,7 +136,7 @@ mod tests {
         let f = Cycle::from(vec![vec![1, 3], vec![4, 5]], ground.clone());
         let g = Cycle::from(vec![vec![1, 2, 5], vec![3, 4]], ground.clone());
         let fg: Cycle<_> = Cycle::from(vec![vec![1, 2, 4], vec![3, 5]], ground.clone());
-        println!("{:?}", fg);
+        
         debug_assert_eq!((f * g).map, fg.map);
         
     }
