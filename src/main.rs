@@ -1,22 +1,16 @@
+use bimap::BiMap;
+use crate::group::symmetric::SymmetricGroup;
+use crate::group::group::Group;
+use crate::group::cycle::Cycle;
+use reperm_gen::bimap;
+
+//Todo: delete this part
 mod group {
     pub mod symmetric;
     pub mod group;
     pub mod cycle;
 }
 
-use bimap::BiMap;
-use crate::group::symmetric::SymmetricGroup;
-use crate::group::group::Group;
-use crate::group::cycle::Cycle;
-
-macro_rules! bimap {
-    // map-like
-    ($($k:expr => $v:expr),* $(,)?) => {{
-        let mut map = BiMap::new();
-        $(map.insert($k, $v);)*
-        map
-    }};
-}
 
 fn main() {
     let ground: Vec<u32> = [1, 2, 3, 4].into_iter().collect();

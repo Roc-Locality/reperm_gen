@@ -1,4 +1,5 @@
 use std::hash::Hash;
+use std::fmt::Debug;
 use std::collections::HashSet;
 use bimap::BiMap;
 
@@ -28,13 +29,14 @@ where
 #[allow(dead_code)]
 impl<'a, V> Group<Cycle<V>> for SymmetricGroup<V> 
 where 
-    V: Clone+Copy+Hash+Eq+PartialEq
+    V: Clone+Copy+Hash+Eq+PartialEq+Debug
 {
     fn get_set(&self) -> HashSet<Cycle<V>> {
         todo!()
     }
 
     ///Note this operation is from right to left (like normal functions)
+    ///We will also assume that if Cycle<V> is implemented correctly, it is properly associative.
     fn op(&self, a: Cycle<V>, b: Cycle<V>) -> Cycle<V> {
         a * b
     }
@@ -47,11 +49,14 @@ where
         e.inverse()
     }
 
+    /// The order of a symmetric group means the size.
+    /// Computing the size is too hard, so we will just use the following formula instead.
     fn order(&self) -> i32 {
         (1..=self.n).product()
     }
 
     /// In Symmetric Groups, we can generate every single n! possible permutations by only combining and adding adjacent transpositions, ie (a_i, a_{i + 1}) for all i.
+    /// We can also perhaps use a different class of generators, but this is fine for now.
     fn get_generator(&self) -> Vec<Cycle<V>> {
         let mut adj_transpositions = Vec::new();
         for window in self.ground.windows(2) {

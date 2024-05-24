@@ -15,7 +15,10 @@ pub trait Group<T: PartialEq+Sized+Clone> {
 
     fn order(&self) -> i32;
     fn get_generator(&self) -> Vec<T>;
-    fn iter(&self, start: T) -> GroupIter<T> where Self: Sized, T: Clone {
+    fn iter(&self, start: T) -> GroupIter<T> 
+    where 
+        Self: Sized, T: Clone 
+    {
         GroupIter::new(start, self)
     }
 }
