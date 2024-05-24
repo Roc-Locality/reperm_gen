@@ -1,15 +1,9 @@
 use bimap::BiMap;
-use crate::group::symmetric::SymmetricGroup;
-use crate::group::group::Group;
-use crate::group::cycle::Cycle;
+use reperm_gen::group::symmetric::SymmetricGroup;
+use reperm_gen::group::group::Group;
+use reperm_gen::group::cycle::Cycle;
 use reperm_gen::bimap;
 
-//Todo: delete this part
-mod group {
-    pub mod symmetric;
-    pub mod group;
-    pub mod cycle;
-}
 
 
 fn main() {
