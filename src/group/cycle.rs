@@ -16,6 +16,8 @@ where
     n: usize,
     /// The main way to define a bimap
     map: BiMap<T, T>,
+    //For hash
+    h: Vec<T>,
 }
 
 impl<T> Cycle<T> 
@@ -36,7 +38,8 @@ where
         Cycle { 
             ground: ground.clone(),
             n: n,
-            map: new_map
+            map: new_map.clone(),
+            h: ground.into_iter().map(|x| new_map.get_by_left(&x).unwrap()).cloned().collect()
         }
     }
 
@@ -66,7 +69,8 @@ where
         Cycle {
             ground: ground.clone(),
             n: map.len(),
-            map: map
+            map: map.clone(),
+            h: ground.into_iter().map(|x| map.get_by_left(&x).unwrap()).cloned().collect()
         }
     }
 
@@ -128,14 +132,7 @@ where
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         //self.ground.hash(state);
         self.n.hash(state);
-
-        // Tupleize the map
-        //let mut v: HashSet<(&T, &T)> = HashSet::new();
-        for (l, r) in self.map.iter() {
-            println!("{:?}", (l, r));
-            (l, r).hash(state);
-        }
-        println!("END");
+        self.h.hash(state);
     }
 }
 /// Tests, mainly associative

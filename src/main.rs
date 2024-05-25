@@ -6,7 +6,7 @@ use reperm_gen::bimap;
 
 
 fn main() {
-    let ground: Vec<u32> = [1, 2, 3].into_iter().collect();
+    let ground: Vec<u32> = vec![1, 2, 3, 4,];
     println!("ground = {:?}", ground);
     let group: SymmetricGroup<u32> = SymmetricGroup::new((&ground).len() as i32, ground.clone());
 
