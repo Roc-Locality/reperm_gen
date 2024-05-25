@@ -6,10 +6,10 @@ use std::ops::Mul;
 use crate::bimap;
 
 ///For permutations
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct Cycle<T> 
 where 
-    T: Clone+Hash+Eq+'static
+    T: Copy+Clone+Hash+Eq+'static
 {
     ground: Vec<T>,
     ///this is the max cycle size
@@ -20,13 +20,23 @@ where
 
 impl<T> Cycle<T> 
 where 
-    T: Clone+Eq+Hash+'static
+    T: Debug+Copy+Clone+Eq+Hash+'static
 {
     pub fn new(map: BiMap<T, T>, ground: Vec<T>) -> Self {
+        let mut new_map = map.clone();
+        let n = (&ground).len();
+        if map.len() != n {
+            (&ground).into_iter()
+                .filter(|g| !map.contains_left(g))
+                .for_each(|g: &T| {
+                    new_map.insert(g.clone(), g.clone());
+                    ()
+            });
+        }
         Cycle { 
-            ground: ground,
-            n: map.len(),
-            map: map
+            ground: ground.clone(),
+            n: n,
+            map: new_map
         }
     }
 
@@ -79,7 +89,7 @@ where
 
 impl<T> Mul for Cycle<T> 
 where 
-    T: Clone+Hash+Eq+Debug
+    T: Copy+Clone+Hash+Eq+Debug
 {
     type Output = Cycle<T>;
 
@@ -102,20 +112,39 @@ where
 }
 
 
-impl<'a, T: Copy> PartialEq for Cycle<T> 
+impl<'a, T> PartialEq for Cycle<T> 
 where 
-    T: Clone+Hash+Eq
+    T: Copy+Clone+Hash+Eq
 {
     fn eq(&self, other: &Self) -> bool {
         self.map.eq(&other.map)
     }
 }   
 
+impl<'a, T> Hash for Cycle<T>
+where
+    T: Copy+Clone+Hash+Eq+Debug
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        //self.ground.hash(state);
+        self.n.hash(state);
+
+        // Tupleize the map
+        //let mut v: HashSet<(&T, &T)> = HashSet::new();
+        for (l, r) in self.map.iter() {
+            println!("{:?}", (l, r));
+            (l, r).hash(state);
+        }
+        println!("END");
+    }
+}
 /// Tests, mainly associative
 
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use crate::group::cycle::Cycle;
 
     #[test]
@@ -130,6 +159,44 @@ mod tests {
         debug_assert_eq!(f.map, crate::bimap![1 => 3, 3 => 1, 4 => 5, 5 => 4, 2 => 2]);
         debug_assert_eq!(g.map, crate::bimap![1 => 2, 2 => 5, 5 => 1, 3 => 4, 4 => 3]);
     }
+
+    #[test]
+    fn construction2() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 2]], ground.clone());
+        // f = 1 3 4 5 
+        //     3 1 5 4
+        debug_assert_eq!(f.map, crate::bimap![1 => 2, 2 => 1, 3 => 3, 4 => 4, 5 => 5]);
+    }
+
+    #[test]
+    fn eq1() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
+        let g = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
+        debug_assert_eq!(f, g);
+    }
+
+    #[test]
+    fn eq2() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 2]], ground.clone());
+        let g = Cycle::from(vec![vec![2, 1]], ground.clone());
+        debug_assert_eq!(f, g);
+    }
+
+    #[test]
+    fn contains_hash() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
+        
+        let g = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
+        debug_assert_eq!(f.clone(), g.clone());
+        let mut set = HashSet::new();
+        set.insert(f);
+        debug_assert_eq!(set.contains(&g), true);
+    }
+
     #[test]
     fn mul_eq1() {
         let ground = vec![1, 2, 3, 4, 5];
@@ -138,6 +205,13 @@ mod tests {
         let fg: Cycle<_> = Cycle::from(vec![vec![1, 2, 4], vec![3, 5]], ground.clone());
         
         debug_assert_eq!((f * g).map, fg.map);
-        
+    }
+
+    #[test]
+    fn apply1() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 5], vec![2, 4]], ground.clone());
+        let output: Vec<i32> = ground.into_iter().map(|x| f.eval(x)).collect();
+        debug_assert_eq!(output, vec![5, 4, 3, 2, 1]);
     }
 }

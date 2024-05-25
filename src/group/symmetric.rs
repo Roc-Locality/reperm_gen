@@ -1,6 +1,5 @@
 use std::hash::Hash;
 use std::fmt::Debug;
-use std::collections::HashSet;
 use bimap::BiMap;
 
 use crate::group::group::Group;
@@ -31,10 +30,6 @@ impl<'a, V> Group<Cycle<V>> for SymmetricGroup<V>
 where 
     V: Clone+Copy+Hash+Eq+PartialEq+Debug
 {
-    fn get_set(&self) -> HashSet<Cycle<V>> {
-        todo!()
-    }
-
     ///Note this operation is from right to left (like normal functions)
     ///We will also assume that if Cycle<V> is implemented correctly, it is properly associative.
     fn op(&self, a: Cycle<V>, b: Cycle<V>) -> Cycle<V> {
@@ -42,7 +37,11 @@ where
     }
 
     fn identity(&self) -> Cycle<V> {
-        Cycle::new(BiMap::new(), self.ground.clone())
+        let mut map = BiMap::new();
+        for g in self.ground.iter() {
+            map.insert(g.clone(), g.clone());
+        }
+        Cycle::new(map, self.ground.clone())
     }
 
     fn inverse(&self, e: Cycle<V>) -> Cycle<V> {
@@ -64,6 +63,7 @@ where
             let curr = window[1].clone();
             let mut map = BiMap::new();
             map.insert(prev, curr);
+            map.insert(curr, prev);
             let adj_t = Cycle::new(map, self.ground.clone());
             adj_transpositions.push(adj_t);
         }
