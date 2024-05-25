@@ -2,7 +2,7 @@ use bimap::BiMap;
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::{collections::HashMap, ops::Mul};
+use std::ops::Mul;
 use crate::bimap;
 
 ///For permutations

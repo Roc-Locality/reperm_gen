@@ -1,5 +1,3 @@
-use bimap::BiMap;
-
 #[macro_export]
 macro_rules! bimap {
     // map-like

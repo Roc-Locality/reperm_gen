@@ -1,4 +1,3 @@
-use bimap::BiMap;
 use reperm_gen::group::symmetric::SymmetricGroup;
 use reperm_gen::group::group::Group;
 use reperm_gen::group::cycle::Cycle;
