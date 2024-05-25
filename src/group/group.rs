@@ -24,7 +24,6 @@ pub trait Group<T: Hash+Eq+Sized+Clone> {
             match pop {
                 Some(element) => {
                     if elements.contains(&element) { continue; }
-                    println!("{:?}", element);
                     elements.insert(element.clone());
                     for gen in generators.iter() {
                         let new_element = self.op(gen.clone(), element.clone());

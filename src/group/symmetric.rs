@@ -5,6 +5,14 @@ use bimap::BiMap;
 use crate::group::group::Group;
 use crate::group::cycle::Cycle;
 
+pub fn sym(n: i32) -> SymmetricGroup<i32> {
+    let ground: Vec<i32> = (1..=n).collect();
+    SymmetricGroup {
+        n: n,
+        ground: ground,
+    }
+}
+
 #[derive(Default)]
 pub struct SymmetricGroup<V> {
     /// the base size of a permutation the order should be n!
@@ -21,6 +29,7 @@ where
             ground: ground,
         }
     }
+
     pub fn get_ground(&self) -> Vec<V> {
         self.ground.clone()
     }
@@ -72,3 +81,37 @@ where
     }
 }
 
+mod tests {
+    use crate::group::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
+
+
+    #[test]
+    fn test_symmetric_3() { 
+        let ground: Vec<i32> = vec![1, 2, 3];
+        let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len() as i32, ground.clone());
+        let symmetric_set = group.get_set();
+        
+        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![1, 2, 3]], ground.clone())), true);
+        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![1, 2]], ground.clone())), true);
+        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![1, 3]], ground.clone())), true);
+        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![2, 3]], ground.clone())), true);
+        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![3, 2, 1]], ground.clone())), true);
+        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![3, 1, 2]], ground.clone())), true);
+    }
+    #[test]
+    fn test_symmetric_5() { 
+        let ground: Vec<i32> = vec![1, 2, 3, 4, 5];
+        let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len() as i32, ground.clone());
+        let symmetric_set = group.get_set();
+        debug_assert_eq!(group.order(), symmetric_set.len() as i32);
+        debug_assert_eq!(group.order(), 120);
+    }
+
+    #[test]
+    fn test_symmetric_8() { 
+        let ground: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 7, 8];
+        let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len() as i32, ground.clone());
+        let symmetric_set = group.get_set();
+        debug_assert_eq!(40320, symmetric_set.len() as i32);
+    }
+}
