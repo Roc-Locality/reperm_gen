@@ -8,12 +8,12 @@ use std::collections::{HashMap, HashSet};
 fn calculate_reuse_distance<T>(trace: &Vec<T>) -> Vec<i32>
 where T: Clone+Eq+Hash+Debug
 {
-    let mut reuse_sets: HashMap<T, HashSet<T>> = HashMap::new();
+    let mut reuse_sets: HashMap<&T, HashSet<&T>> = HashMap::new();
     let mut reuse_distance: Vec<i32> = Vec::new();
 
     for access in trace.into_iter().rev() {
         reuse_sets.iter_mut().for_each(|(_, reuse_set)| {
-            reuse_set.insert(access.clone());
+            reuse_set.insert(access);
         });
         match reuse_sets.get_mut(access) {
             Some(reuse_set) => {
@@ -22,7 +22,7 @@ where T: Clone+Eq+Hash+Debug
                 reuse_set.clear();
             },
             None => {
-                reuse_sets.insert(access.clone(), HashSet::new());
+                reuse_sets.insert(access, HashSet::new());
                 reuse_distance.push(-1);
             },
         }
