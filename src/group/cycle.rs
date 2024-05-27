@@ -174,6 +174,32 @@ mod tests {
     }
 
     #[test]
+    fn fn_construction1() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 5], vec![4, 2]], ground.clone());
+        let func = f.get_function();
+        
+        debug_assert_eq!(func(3), 3);
+        debug_assert_eq!(func(1), 5);
+        debug_assert_eq!(func(5), 1);
+        debug_assert_eq!(func(2), 4);
+        debug_assert_eq!(func(4), 2);
+    }
+
+    #[test]
+    fn fn_construction2() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![]], ground.clone());
+        let func = f.get_function();
+        
+        debug_assert_eq!(func(1), 1);
+        debug_assert_eq!(func(2), 2);
+        debug_assert_eq!(func(3), 3);
+        debug_assert_eq!(func(4), 4);
+        debug_assert_eq!(func(5), 5);
+    }
+
+    #[test]
     fn eq1() {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
