@@ -89,6 +89,13 @@ where
             _ => i // if it doesn't match, we will make an assumption here that it will just return the same thing
         }
     }
+
+    pub fn get_function(&self) -> Box<dyn Fn(T) -> T> {
+        let m = self.map.clone();
+        Box::new(move |e| {
+            m.get_by_left(&e).unwrap().clone()
+        })
+    }
 }
 
 impl<T> Mul for Cycle<T> 
