@@ -105,6 +105,9 @@ where
     type Output = Cycle<T>;
 
     fn mul(self, rhs: Cycle<T>) -> Self::Output {
+        if self.ground.len() != rhs.ground.len() {
+            panic!("The cycles being multiplied have the wrong ground sets! {:?} vs {:?}", self.ground.len(), rhs.ground.len());
+        }
         let same_ground = self.ground.clone();
 
         let mut new_map: BiMap<T, T> = BiMap::new();

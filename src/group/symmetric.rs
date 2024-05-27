@@ -1,6 +1,6 @@
 use std::hash::Hash;
 use std::fmt::Debug;
-use bimap::BiMap;
+use bimap::{BiHashMap, BiMap};
 
 use crate::group::group::Group;
 use crate::group::cycle::Cycle;
@@ -21,7 +21,7 @@ pub struct SymmetricGroup<V> {
 }
 impl<V> SymmetricGroup<V> 
 where
-    V: Clone
+    V: Clone+Copy+Hash+Eq+PartialEq+Debug
 {
     pub fn new(n: i32, ground: Vec<V>) -> SymmetricGroup<V> {
         SymmetricGroup {
@@ -33,6 +33,12 @@ where
     pub fn get_ground(&self) -> Vec<V> {
         self.ground.clone()
     }
+
+    ///Shorthand for making new cycles with respect to a symmetric group.
+    fn create(&self, map: BiHashMap<V, V>) -> Cycle<V> {
+        Cycle::new(map, self.get_ground())
+    } 
+    
 }
 #[allow(dead_code)]
 impl<'a, V> Group<Cycle<V>> for SymmetricGroup<V> 
@@ -83,7 +89,6 @@ where
 
 mod tests {
     use crate::group::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
-
 
     #[test]
     fn test_symmetric_3() { 
