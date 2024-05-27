@@ -44,7 +44,10 @@ where
 
 
     fn iter(&'a self) -> Box<dyn Iterator<Item = Vec<T>> + 'a> {
-        Box::new(PeriodicGenIter::new(self))
+        match self.permutations.len() == 0 {
+            false => Box::new(PeriodicGenIter::new(self)),
+            true => panic!("permutations must have at least one element! Add to it with PeriodicGen#add")
+        }
     }
 }
 

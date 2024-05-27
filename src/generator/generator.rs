@@ -1,6 +1,8 @@
 ///A generator is an interface that tells us that given a base set
 ///It will transform the set into another set as long as the operation is closed.
 ///Meaning that the set yielded is from same domain as the single operand.
+///This generator is supposed to be as self contained as possible, so that if you want
+///to add other ways of manipulating the trace outside of using a symmetric group.
 pub trait Generator<'a, T> 
 where 
     T: PartialEq+Sized+Clone
