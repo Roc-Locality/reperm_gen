@@ -14,4 +14,16 @@ where
     /// This clears the list of permutations.
     fn clear(&mut self);
     fn iter(&'a self) -> Box<dyn Iterator<Item = Vec<T>> + 'a>;
+    /// This runs iter m times, then returns the total vector of the result.
+    fn simulate(&'a self, m: usize) -> Vec<T> {
+        let mut iter = self.iter();
+        let mut out = Vec::new();
+        for _ in 1..=m {
+            match iter.next() {
+                Some(mut next_trace) => out.append(&mut next_trace),
+                None => ()
+            }
+        }
+        out
+    } 
 }

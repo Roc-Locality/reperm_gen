@@ -93,3 +93,59 @@ where
         Some(old)
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use crate::{bimap, generator::generator::Generator, group::cycle::Cycle};
+
+    use super::PeriodicGen;
+
+    #[test]
+    fn trace_abab() {
+        // Make the ground set
+        let ground = vec![1, 2, 3, 4, 5];
+        // Make the generator
+        let mut generator = PeriodicGen::new();
+        generator.set_start(&ground);
+        // Make your function
+        let reverse_cycle = Cycle::new(bimap!(5 => 1, 1 => 5, 2 => 4, 4 => 2), ground.clone());
+        let func = reverse_cycle.get_function();
+        generator.add(func);
+        // Call the iterator
+        let mut gen_iter = generator.iter();
+        debug_assert_eq!(gen_iter.next(), Some(vec![1, 2, 3, 4, 5]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![5, 4, 3, 2, 1]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![1, 2, 3, 4, 5]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![5, 4, 3, 2, 1]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![1, 2, 3, 4, 5]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![5, 4, 3, 2, 1]));
+    }
+
+    #[test]
+    fn trace_aaaa() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let mut generator = PeriodicGen::new();
+        generator.set_start(&ground);
+        let reverse_cycle = Cycle::new(bimap!(1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5), ground.clone());
+        let func = reverse_cycle.get_function();
+        generator.add(func);
+        let mut gen_iter = generator.iter();
+        debug_assert_eq!(gen_iter.next(), Some(vec![1, 2, 3, 4, 5]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![1, 2, 3, 4, 5]));
+        debug_assert_eq!(gen_iter.next(), Some(vec![1, 2, 3, 4, 5]));
+    }
+
+    #[test]
+    fn trace_iter_collect() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let mut generator = PeriodicGen::new();
+        generator.set_start(&ground);
+        let reverse_cycle = Cycle::new(bimap!(1 => 2, 2 => 3, 3 => 4, 4 => 5, 5 => 1), ground.clone());
+        let func = reverse_cycle.get_function();
+        generator.add(func);
+        debug_assert_eq!(generator.simulate(1), vec![1, 2, 3, 4, 5]);
+        debug_assert_eq!(generator.simulate(2), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1]);
+        debug_assert_eq!(generator.simulate(3), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2]);
+    }
+}
