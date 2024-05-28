@@ -96,6 +96,29 @@ where
             m.get_by_left(&e).unwrap().clone()
         })
     }
+
+    /// This yields the cycle representation, aka (123),(435), etc
+    /// If you pass the output to a #from method, you should get the same object.
+    /// If show_one is True, then we should also show the full cycle representation (aka, include the 1-cycles)
+    /// If show_ene is False, show the normal representation.
+    pub fn get_cycle_representation(&self, show_one: bool) -> Vec<Vec<T>> {
+        let mut visited = HashSet::new();
+        let mut cycles = Vec::new();
+        for g in self.ground.clone() {
+            let mut cycle = Vec::new();
+            let mut curr: &T = &g;
+            while !visited.contains(curr) {
+                visited.insert(curr.clone());
+                cycle.push(curr.clone());
+                curr = self.map.get_by_left(curr).unwrap();
+            }
+            
+            if !cycle.is_empty() && ((&cycle).len() != 1 || show_one) {
+                cycles.push(cycle);
+            }
+        }
+        cycles
+    }
 }
 
 impl<T> Mul for Cycle<T> 
@@ -174,6 +197,24 @@ mod tests {
         // f = 1 3 4 5 
         //     3 1 5 4
         debug_assert_eq!(f.map, crate::bimap![1 => 2, 2 => 1, 3 => 3, 4 => 4, 5 => 5]);
+    }
+
+    #[test]
+    fn construction3() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 2], vec![3, 4]], ground.clone());
+        
+        debug_assert_eq!(f.get_cycle_representation(true), vec![vec![1, 2], vec![3, 4], vec![5]]);
+        debug_assert_eq!(f.get_cycle_representation(false), vec![vec![1, 2], vec![3, 4]]);
+    }
+
+    #[test]
+    fn construction4() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 5], vec![2, 4], vec![3]], ground.clone());
+        
+        debug_assert_eq!(f.get_cycle_representation(true), vec![vec![1, 5], vec![2, 4], vec![3]]);
+        debug_assert_eq!(f.get_cycle_representation(false), vec![vec![1, 5], vec![2, 4]]);
     }
 
     #[test]
