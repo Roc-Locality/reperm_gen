@@ -18,7 +18,7 @@ where
     fn simulate(&'a self, m: usize) -> Vec<T> {
         let mut iter = self.iter();
         let mut out = Vec::new();
-        for _ in 1..=m {
+        for _ in 0..=m {
             match iter.next() {
                 Some(mut next_trace) => out.append(&mut next_trace),
                 None => ()

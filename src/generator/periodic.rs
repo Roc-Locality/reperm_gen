@@ -144,8 +144,11 @@ mod tests {
         let reverse_cycle = Cycle::new(bimap!(1 => 2, 2 => 3, 3 => 4, 4 => 5, 5 => 1), ground.clone());
         let func = reverse_cycle.get_function();
         generator.add(func);
-        debug_assert_eq!(generator.simulate(1), vec![1, 2, 3, 4, 5]);
-        debug_assert_eq!(generator.simulate(2), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1]);
-        debug_assert_eq!(generator.simulate(3), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2]);
+        debug_assert_eq!(generator.simulate(0), vec![1, 2, 3, 4, 5]);
+        debug_assert_eq!(generator.simulate(1), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1]);
+        debug_assert_eq!(generator.simulate(2), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2]);
+        debug_assert_eq!(generator.simulate(3), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2, 4, 5, 1, 2, 3]);
+        debug_assert_eq!(generator.simulate(4), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2, 4, 5, 1, 2, 3, 5, 1, 2, 3, 4]);
+        debug_assert_eq!(generator.simulate(5), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2, 4, 5, 1, 2, 3, 5, 1, 2, 3, 4, 1, 2, 3, 4, 5]);
     }
 }
