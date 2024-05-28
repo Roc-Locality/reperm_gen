@@ -137,6 +137,23 @@ mod tests {
     }
 
     #[test]
+    fn trace_specific() {
+
+        let ground = vec!["x_1", "x_2", "x_3", "x_4", "x_5"];
+        let mut generator = PeriodicGen::new();
+        generator.set_start(&vec!["x_2"]);
+        let cycle = Cycle::new(bimap!("x_2" => "x_3", "x_3" => "x_4", "x_4" => "x_2"), ground.clone());
+        let func = cycle.get_function();
+        generator.add(func);
+
+        let mut gen_iter = generator.iter();
+        debug_assert_eq!(gen_iter.next(), Some(vec!["x_2"])); // "x_1", "x_2", "x_3", "x_4", "x_5"
+        debug_assert_eq!(gen_iter.next(), Some(vec!["x_3"])); // "x_1", "x_3", "x_4", "x_2", "x_5"
+        debug_assert_eq!(gen_iter.next(), Some(vec!["x_4"])); // "x_1", "x_4", "x_2", "x_3", "x_5"
+        debug_assert_eq!(gen_iter.next(), Some(vec!["x_2"])); // "x_1", "x_2", "x_3", "x_4", "x_5"
+        debug_assert_eq!(gen_iter.next(), Some(vec!["x_3"]));
+    }
+    #[test]
     fn trace_iter_collect() {
         let ground = vec![1, 2, 3, 4, 5];
         let mut generator = PeriodicGen::new();
@@ -151,4 +168,6 @@ mod tests {
         debug_assert_eq!(generator.simulate(4), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2, 4, 5, 1, 2, 3, 5, 1, 2, 3, 4]);
         debug_assert_eq!(generator.simulate(5), vec![1, 2, 3, 4, 5, 2, 3, 4, 5, 1, 3, 4, 5, 1, 2, 4, 5, 1, 2, 3, 5, 1, 2, 3, 4, 1, 2, 3, 4, 5]);
     }
+
+    
 }
