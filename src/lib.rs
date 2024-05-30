@@ -10,6 +10,10 @@ pub mod generator {
     pub mod periodic;
 }
 
+pub mod graph {
+    pub mod action_graph;
+}
+
 pub mod reuse;
 
 pub mod macros;

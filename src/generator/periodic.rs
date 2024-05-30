@@ -41,8 +41,6 @@ where
         self.permutations.clear();
     }
 
-
-
     fn iter(&'a self) -> Box<dyn Iterator<Item = Vec<T>> + 'a> {
         match self.permutations.len() == 0 {
             false => Box::new(PeriodicGenIter::new(self)),
