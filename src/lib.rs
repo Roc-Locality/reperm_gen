@@ -14,7 +14,9 @@ pub mod graph {
     pub mod action_graph;
 }
 
-pub mod reuse;
+pub mod locality {
+    pub mod reuse;
+}
 
 pub mod macros;
 pub use ::bimap;
