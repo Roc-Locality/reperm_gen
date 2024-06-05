@@ -1,9 +1,11 @@
+use crate::bimap;
+
 use bimap::BiMap;
 use std::collections::HashSet;
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 use std::hash::Hash;
 use std::ops::Mul;
-use crate::bimap;
+
 
 ///For permutations
 #[derive(Clone, Debug, Eq)]
@@ -119,6 +121,23 @@ where
         }
         cycles
     }
+
+    pub fn display(&self) -> String 
+        where T: ToString
+    {
+        let mut out = String::from("");
+        for cycle in self.get_cycle_representation(false).into_iter() {
+            out.push('(');
+            for element in cycle {
+                out.push_str(&element.to_string());
+                out.push(',');
+            }
+            out.pop();
+
+            out.push(')');
+        }
+        out
+    }
 }
 
 impl<T> Mul for Cycle<T> 
@@ -168,6 +187,15 @@ where
         self.h.hash(state);
     }
 }
+impl<T> fmt::Display for Cycle<T>
+where 
+    T: Copy+Clone+Hash+Eq+Debug+ToString
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.display())
+    }
+}
+
 /// Tests, mainly associative
 
 
@@ -215,6 +243,13 @@ mod tests {
         
         debug_assert_eq!(f.get_cycle_representation(true), vec![vec![1, 5], vec![2, 4], vec![3]]);
         debug_assert_eq!(f.get_cycle_representation(false), vec![vec![1, 5], vec![2, 4]]);
+    }
+
+    #[test]
+    fn display1() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 5], vec![2, 4], vec![3]], ground.clone());
+        debug_assert_eq!(f.display(), "(1,5)(2,4)");
     }
 
     #[test]
