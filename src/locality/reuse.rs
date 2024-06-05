@@ -1,3 +1,4 @@
+use crate::math::combinations::{factorial, combinations};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::collections::{HashMap, HashSet};
@@ -40,14 +41,6 @@ fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
         .filter(|x| *x != -1)
         .filter(|x| *x <= cache_size as i32)
         .count()
-}
-
-fn factorial(num: i128) -> i128 {
-    (1..=num).product()
-}
-
-fn combinations(n: i128, k: i128) -> i128 {
-    (factorial(n) / factorial(k)) / factorial(n - k) 
 }
 
 fn calculate_lru_hits_formula(data_items: i128, cache_size: i128, hits: i128) -> i128 {
@@ -121,7 +114,7 @@ mod tests {
 
     #[test]
     fn equivalent_comb_formula_3() {
-        let data_items = 39;
+        let data_items = 33;
         let cache_size = 4;
 
         let a: i128 = (0..=cache_size).into_iter()

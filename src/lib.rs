@@ -14,6 +14,9 @@ pub mod graph {
     pub mod action_graph;
 }
 
+pub mod math {
+    pub mod combinations;
+}
 pub mod locality {
     pub mod reuse;
 }
