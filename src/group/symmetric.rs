@@ -35,8 +35,12 @@ where
     }
 
     ///Shorthand for making new cycles with respect to a symmetric group.
-    fn create(&self, map: BiHashMap<V, V>) -> Cycle<V> {
+    pub fn create(&self, map: BiHashMap<V, V>) -> Cycle<V> {
         Cycle::new(map, self.get_ground())
+    }
+
+    pub fn create_vec(&self, lis: Vec<Vec<V>>) -> Cycle<V> {
+        Cycle::from(lis, self.get_ground())
     } 
     
 }

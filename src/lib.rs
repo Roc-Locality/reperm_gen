@@ -12,6 +12,7 @@ pub mod generator {
 
 pub mod graph {
     pub mod action_graph;
+    pub mod cayley_graph;
 }
 
 pub mod math {

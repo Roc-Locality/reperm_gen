@@ -3,15 +3,15 @@ use std::iter::IntoIterator;
 use petgraph::{graph::{Graph, NodeIndex, EdgeIndex}, Undirected};
 
 //should this be &'a T ?
-type Evaluate<T> = dyn Fn(T) -> T;
+pub type Evaluate<T> = dyn Fn(T) -> T;
 
 /// This is an action graph which consider of nodes that can be used to compute values.
 /// T is the actual functions/transformations stored, and V are the input to those functions in T.
-struct ActionGraph<V> 
+pub struct ActionGraph<V> 
 where 
     V: Clone,
 {
-    backing_graph: Graph<&'static str, &'static str, Undirected>,
+    backing_graph: Graph<String, String, Undirected>,
     node_map: HashMap<NodeIndex, Box<Evaluate<V>>>,
     //todo: it should probably be a general iterator, not Vec<V>
     value_map: HashMap<NodeIndex, Vec<V>>,
@@ -30,13 +30,13 @@ where
         }
     }
 
-    pub fn add_node(&mut self, func: Box<Evaluate<V>>, func_name: &'static str) -> NodeIndex {
+    pub fn add_node(&mut self, func: Box<Evaluate<V>>, func_name: String) -> NodeIndex {
         let ind = self.backing_graph.add_node(func_name);
         self.node_map.insert(ind, func);
         ind
     }
 
-    pub fn add_edge(&mut self, edges: (NodeIndex, NodeIndex), edge_name: &'static str) -> EdgeIndex {
+    pub fn add_edge(&mut self, edges: (NodeIndex, NodeIndex), edge_name: String) -> EdgeIndex {
         let node1 = edges.0;
         let node2 = edges.1;
         self.backing_graph.add_edge(node1, node2, edge_name)
@@ -74,12 +74,12 @@ mod tests {
         let add_1 = move |x| x + 1;
         let add_2 = move |x| x + 2;
         let add_3 = move |x| x + 3;
-        let a1 = add_graph.add_node(Box::new(add_1), "add_1");
-        let a2 = add_graph.add_node(Box::new(add_2), "add_2");
-        let a3 = add_graph.add_node(Box::new(add_3), "add_3");
+        let a1 = add_graph.add_node(Box::new(add_1), String::from("add_1"));
+        let a2 = add_graph.add_node(Box::new(add_2), String::from("add_2"));
+        let a3 = add_graph.add_node(Box::new(add_3), String::from("add_3"));
 
-        add_graph.add_edge((a1, a2), "+1");
-        add_graph.add_edge((a2, a3), "+1");
+        add_graph.add_edge((a1, a2), String::from("+1"));
+        add_graph.add_edge((a2, a3), String::from("+1"));
 
         add_graph.set_start_value(&vec![1,2,3,4,5]);
 
