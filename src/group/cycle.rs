@@ -11,7 +11,7 @@ use std::ops::Mul;
 #[derive(Clone, Debug, Eq)]
 pub struct Cycle<T> 
 where 
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
     ground: Vec<T>,
     ///this is the max cycle size
@@ -24,7 +24,7 @@ where
 
 impl<T> Cycle<T> 
 where 
-    T: Debug+Copy+Clone+Eq+Hash+'static
+    T: Debug+Clone+Eq+Hash+'static
 {
     pub fn new(map: BiMap<T, T>, ground: Vec<T>) -> Self {
         let mut new_map = map.clone();
@@ -142,7 +142,7 @@ where
 
 impl<T> Mul for Cycle<T> 
 where 
-    T: Copy+Clone+Hash+Eq+Debug
+    T: Clone+Hash+Eq+Debug
 {
     type Output = Cycle<T>;
 
@@ -170,7 +170,7 @@ where
 
 impl<'a, T> PartialEq for Cycle<T> 
 where 
-    T: Copy+Clone+Hash+Eq
+    T: Clone+Hash+Eq
 {
     fn eq(&self, other: &Self) -> bool {
         self.map.eq(&other.map)
@@ -179,7 +179,7 @@ where
 
 impl<'a, T> Hash for Cycle<T>
 where
-    T: Copy+Clone+Hash+Eq+Debug
+    T: Clone+Hash+Eq+Debug
 {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         //self.ground.hash(state);
@@ -189,7 +189,7 @@ where
 }
 impl<T> fmt::Display for Cycle<T>
 where 
-    T: Copy+Clone+Hash+Eq+Debug+ToString
+    T: Clone+Hash+Eq+Debug+ToString
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.display())

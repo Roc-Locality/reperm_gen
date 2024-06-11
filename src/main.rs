@@ -1,16 +1,40 @@
-use reperm_gen::group::symmetric::{sym, SymmetricGroup};
-use reperm_gen::group::group::Group;
+use bimap::BiMap;
 use reperm_gen::group::cycle::Cycle;
-use reperm_gen::bimap;
+use reperm_gen::generator::generator::Generator;
+use reperm_gen::generator::periodic::PeriodicGen;
+use std::env;
+use std::fs::File;
+use std::io::{self, BufRead};
 
 
 
 fn main() {
-    let group: SymmetricGroup<i32> = sym(5);
-
-    let nat: Cycle<i32> = Cycle::new(bimap! {1 => 2, 2 => 3, 3 => 4, 4 => 1}, group.get_ground().clone());
-    let rev: Cycle<i32> = Cycle::new(bimap! {4 => 3, 3 => 2, 2 => 1, 1 => 4}, group.get_ground().clone());
-    let symmetric_set = group.get_set();
-    println!("{:?}", symmetric_set);
-    println!("{:?}", symmetric_set.len());
+    let args: Vec<String> = env::args().collect();
+    let file_path: &String = &args[1];
+    let file = File::open(file_path).unwrap();
+    let buf = io::BufReader::new(file);
+    let mut lines = buf.lines();
+    let parameter_number: usize = lines.next().unwrap().unwrap().trim().parse().expect("Should have been able to read the parameter number");
+    let mut ground: Vec<String> = Vec::new();
+    let mut permutation: BiMap<String, String> = BiMap::new();
+    for _ in 0..parameter_number {
+        let line = lines.next().unwrap().unwrap();
+        permutation.insert(line.clone(), line.clone());
+        ground.push(line);
+    }
+    let mut generator: PeriodicGen<String> = PeriodicGen::new();
+    generator.set_start(&ground);
+    let permutation_number: usize = lines.next().unwrap().unwrap().trim().parse().expect("Should have been able to read the permutation number");
+    for _ in 0..permutation_number {
+        let line = lines.next().unwrap().unwrap();
+        let space_index = line.find(' ').unwrap_or(line.len());
+        let (input, output) = line.split_at(space_index);
+        permutation.insert(input.trim().to_owned(), output.trim().to_owned());
+    }
+    let cycle = Cycle::new(permutation, ground.clone());
+    println!("{cycle}");
+    let func = cycle.get_function();
+    generator.add(func);
+    let simulation_number: usize = lines.next().unwrap().unwrap().trim().parse().expect("Should have been able to read the simulation number");
+    println!("{:?}", generator.simulate(simulation_number));
 }

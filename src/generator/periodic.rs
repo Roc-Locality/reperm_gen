@@ -3,7 +3,7 @@ use crate::generator::generator::Generator;
 
 pub struct PeriodicGen<T> 
 where
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
     start: Vec<T>,
     permutations: Vec<Box<dyn Fn(T) -> T>>
@@ -11,9 +11,9 @@ where
 
 impl<T> PeriodicGen<T> 
 where
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
-    fn new() -> Self {
+    pub fn new() -> Self {
         PeriodicGen {
             start: Vec::new(),
             permutations: Vec::new()
@@ -23,7 +23,7 @@ where
 
 impl<'a, T> Generator<'a, T> for PeriodicGen<T>
 where
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
     fn start(&self) -> Vec<T> {
         self.start.clone()
@@ -51,7 +51,7 @@ where
 
 pub struct PeriodicGenIter<'a, T> 
 where
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
     curr: Vec<T>,
     index_state: usize,
@@ -60,7 +60,7 @@ where
 
 impl<'a, T> PeriodicGenIter<'a, T> 
 where
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
     fn new(periodic_generator: &'a PeriodicGen<T>) -> Self {
         PeriodicGenIter {
@@ -73,7 +73,7 @@ where
 
 impl<'a, T> Iterator for PeriodicGenIter<'a, T> 
 where 
-    T: Copy+Clone+Hash+Eq+'static
+    T: Clone+Hash+Eq+'static
 {
     type Item = Vec<T>;
     
@@ -82,7 +82,7 @@ where
 
         let next_vec = self.curr
             .iter()
-            .map(|x| funcs[self.index_state](*x))
+            .map(|x| funcs[self.index_state](x.clone()))
             .collect();
         self.index_state = (self.index_state + 1) % (funcs.len());
         let old = self.curr.clone();
