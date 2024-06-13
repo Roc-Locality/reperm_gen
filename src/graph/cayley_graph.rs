@@ -26,9 +26,9 @@ where
     pub fn new(group: &SymmetricGroup<V>) -> Self {
         let mut ag = ActionGraph::<V>::new();
         //collect nodes first
-        let mut node_map: HashMap<Cycle<V>, NodeIndex> = HashMap::new();
+        let mut nodemap: HashMap<Cycle<V>, NodeIndex> = HashMap::new();
         for g in group.get_set().into_iter() {
-            node_map.insert(g.clone(), ag.add_node(Box::new(g.get_function()), g.display()));
+            nodemap.insert(g.clone(), ag.add_node(Box::new(g.get_function()), g.display()));
         }
         //
         let generators: Vec<Cycle<V>> = group.get_generator();
@@ -39,32 +39,28 @@ where
         
         let mut q = VecDeque::from([e]);
         while !q.is_empty() {
-            let pop = q.pop_front();
-            match pop {
-                Some(element) => {
-                    if elements.contains(&element) { continue; }
-                    elements.insert(element.clone());
-                    let a = node_map.get(&element).unwrap();
-                    for gen in generators.iter() {
-                        {
-                            let new_element = group.op(gen.clone(), element.clone());
-                            q.push_front(new_element.clone());
-                            let b = node_map.get(&new_element).unwrap();
-                            ag.add_edge((*a, *b), gen.display());
-                        }
-                        {
-                            let new_element = group.op(element.clone(), gen.clone());
-                            q.push_front(new_element.clone());
-                            let b = node_map.get(&new_element).unwrap();
-                            ag.add_edge((*a, *b), gen.display());
-                        }
+            if let Some(element) = q.pop_front() {
+                if elements.contains(&element) { continue; }
+                elements.insert(element.clone());
+                let a = nodemap.get(&element).unwrap();
+                for gen in generators.iter() {
+                    {
+                        let new_element = group.op(gen.clone(), element.clone());
+                        q.push_front(new_element.clone());
+                        let b = nodemap.get(&new_element).unwrap();
+                        ag.add_edge((*a, *b), gen.display());
                     }
-                },
-                None => {}
+                    {
+                        let new_element = group.op(element.clone(), gen.clone());
+                        q.push_front(new_element.clone());
+                        let b = nodemap.get(&new_element).unwrap();
+                        ag.add_edge((*a, *b), gen.display());
+                    }
+                }
             }
         }
         CayleyGraph {
-            node_map: node_map,
+            node_map: nodemap,
             action_graph: ag,
         }
     }
@@ -80,7 +76,6 @@ mod tests {
     use crate::{graph::cayley_graph::CayleyGraph, group::{cycle::Cycle, symmetric::SymmetricGroup}};
     use crate::bimap;
     use super::ActionGraph;
-    use petgraph::dot::{Dot, Config};
 
     #[test]
     fn group_action() {

@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::collections::{HashMap, HashSet};
 
-use petgraph::data;
 
 /// This will calculate the forward distance.
 /// This is done by looking ahead and refreshing the last seen index in its calculation.
@@ -14,7 +13,7 @@ where T: Clone+Eq+Hash+Debug
     let mut reuse_sets: HashMap<&T, HashSet<&T>> = HashMap::new();
     let mut reuse_distance: Vec<i32> = Vec::new();
 
-    for access in trace.into_iter().rev() {
+    for access in trace.iter().rev() {
         reuse_sets.iter_mut().for_each(|(_, reuse_set)| {
             reuse_set.insert(access);
         });
@@ -45,9 +44,9 @@ fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
 
 fn calculate_lru_hits_formula(data_items: i128, cache_size: i128, hits: i128) -> i128 {
     if 2 * cache_size <=  data_items + hits {
-        let m = data_items as i128;
-        let c = cache_size as i128;
-        let h = hits as i128;
+        let m = data_items;
+        let c = cache_size;
+        let h = hits;
 
         factorial(c) * combinations(c, h) * combinations(m - c, c - h) * factorial(m - c)
     } else {

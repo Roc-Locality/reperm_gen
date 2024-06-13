@@ -9,6 +9,15 @@ where
     permutations: Vec<Box<dyn Fn(T) -> T>>
 }
 
+impl<T> Default for PeriodicGen<T>
+where
+    T: Clone+Hash+Eq+'static
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> PeriodicGen<T> 
 where
     T: Clone+Hash+Eq+'static
@@ -30,7 +39,7 @@ where
     }
 
     fn set_start(&mut self, start: &Vec<T>) {
-        self.start = start.clone()
+        self.start.clone_from(start);
     }
 
     fn add(&mut self, f: Box<dyn Fn(T) -> T>) {
@@ -42,7 +51,7 @@ where
     }
 
     fn iter(&'a self) -> Box<dyn Iterator<Item = Vec<T>> + 'a> {
-        match self.permutations.len() == 0 {
+        match self.permutations.is_empty() {
             false => Box::new(PeriodicGenIter::new(self)),
             true => panic!("permutations must have at least one element! Add to it with PeriodicGen#add")
         }

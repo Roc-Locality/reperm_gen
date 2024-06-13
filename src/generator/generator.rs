@@ -19,9 +19,8 @@ where
         let mut iter = self.iter();
         let mut out = Vec::new();
         for _ in 0..=m {
-            match iter.next() {
-                Some(mut next_trace) => out.append(&mut next_trace),
-                None => ()
+            if let Some(mut next_trace) = iter.next() {
+                out.append(&mut next_trace);
             }
         }
         out

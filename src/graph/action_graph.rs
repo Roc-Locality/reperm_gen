@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::iter::IntoIterator;
 use petgraph::{graph::{Graph, NodeIndex, EdgeIndex}, Undirected};
 
 //should this be &'a T ?
@@ -17,8 +16,16 @@ where
     value_map: HashMap<NodeIndex, Vec<V>>,
 }
 
+impl<V> Default for ActionGraph<V>
+where 
+     V: Clone+'static,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
-impl<'a, V> ActionGraph<V> 
+impl<V> ActionGraph<V> 
 where 
     V: Clone+'static,
 {
@@ -56,7 +63,7 @@ where
         for node in self.backing_graph.node_indices() {
             let curr_val = self.value_map.get(&node).unwrap();
             let curr_func = self.node_map.get(&node).unwrap();
-            let new_values = curr_val.into_iter()
+            let new_values = curr_val.iter()
                 .map(|v| curr_func(v.clone()))
                 .collect();
             self.value_map.insert(node, new_values);

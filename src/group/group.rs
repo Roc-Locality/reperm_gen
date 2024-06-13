@@ -20,17 +20,13 @@ pub trait Group<T: Hash+Eq+Sized+Clone> {
         //construct a bfs, with the identity element intiially in it.
         let mut q = VecDeque::from([self.identity()]);
         while !q.is_empty() {
-            let pop = q.pop_front();
-            match pop {
-                Some(element) => {
-                    if elements.contains(&element) { continue; }
-                    elements.insert(element.clone());
-                    for gen in generators.iter() {
-                        let new_element = self.op(gen.clone(), element.clone());
-                        q.push_front(new_element);
-                    }
-                },
-                None => {}
+            if let Some(element) = q.pop_front() {
+                if elements.contains(&element) { continue; }
+                elements.insert(element.clone());
+                for gen in generators.iter() {
+                    let new_element = self.op(gen.clone(), element.clone());
+                    q.push_front(new_element);
+                }
             }
         }
         elements
@@ -62,11 +58,11 @@ impl<'a, T> GroupIter<'a, T>
 where 
     T: Clone 
 {
-    fn new(curr: T, group: &'a dyn Group<T>) -> GroupIter<'a, T> {
+    fn new(curr: T, g: &'a dyn Group<T>) -> GroupIter<'a, T> {
         GroupIter {
             start: curr.clone(),
             curr: curr.clone(),
-            group: group,
+            group: g,
         }
     }
 }

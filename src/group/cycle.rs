@@ -28,18 +28,17 @@ where
 {
     pub fn new(map: BiMap<T, T>, ground: Vec<T>) -> Self {
         let mut new_map = map.clone();
-        let n = (&ground).len();
-        if map.len() != n {
-            (&ground).into_iter()
+        let size = ground.len();
+        if map.len() != size {
+            (&ground).iter()
                 .filter(|g| !map.contains_left(g))
                 .for_each(|g: &T| {
                     new_map.insert(g.clone(), g.clone());
-                    ()
             });
         }
         Cycle { 
             ground: ground.clone(),
-            n: n,
+            n: size,
             map: new_map.clone(),
             h: ground.into_iter().map(|x| new_map.get_by_left(&x).unwrap()).cloned().collect()
         }
@@ -58,7 +57,7 @@ where
                 
             }
             if let (Some(last), Some(first)) = (cycle.last(), cycle.first()) {
-                set.remove(&last);
+                set.remove(last);
                 map.insert(last.clone(), first.clone());
             }
 
@@ -115,7 +114,7 @@ where
                 curr = self.map.get_by_left(curr).unwrap();
             }
             
-            if !cycle.is_empty() && ((&cycle).len() != 1 || show_one) {
+            if !cycle.is_empty() && (cycle.len() != 1 || show_one) {
                 cycles.push(cycle);
             }
         }
@@ -168,7 +167,7 @@ where
 }
 
 
-impl<'a, T> PartialEq for Cycle<T> 
+impl<T> PartialEq for Cycle<T> 
 where 
     T: Clone+Hash+Eq
 {
@@ -177,7 +176,7 @@ where
     }
 }   
 
-impl<'a, T> Hash for Cycle<T>
+impl<T> Hash for Cycle<T>
 where
     T: Clone+Hash+Eq+Debug
 {

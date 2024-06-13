@@ -5,10 +5,10 @@ use bimap::{BiHashMap, BiMap};
 use crate::group::group::Group;
 use crate::group::cycle::Cycle;
 
-pub fn sym(n: i32) -> SymmetricGroup<i32> {
-    let ground: Vec<i32> = (1..=n).collect();
+pub fn sym(n_size: i32) -> SymmetricGroup<i32> {
+    let ground: Vec<i32> = (1..=n_size).collect();
     SymmetricGroup {
-        n: n,
+        n: n_size,
         ground: ground,
     }
 }
@@ -23,10 +23,10 @@ impl<V> SymmetricGroup<V>
 where
     V: Clone+Copy+Hash+Eq+PartialEq+Debug
 {
-    pub fn new(n: i32, ground: Vec<V>) -> SymmetricGroup<V> {
+    pub fn new(n_size: i32, g: Vec<V>) -> SymmetricGroup<V> {
         SymmetricGroup {
-            n: n,
-            ground: ground,
+            n: n_size,
+            ground: g,
         }
     }
 
@@ -45,7 +45,7 @@ where
     
 }
 #[allow(dead_code)]
-impl<'a, V> Group<Cycle<V>> for SymmetricGroup<V> 
+impl<V> Group<Cycle<V>> for SymmetricGroup<V> 
 where 
     V: Clone+Copy+Hash+Eq+PartialEq+Debug
 {
@@ -58,7 +58,7 @@ where
     fn identity(&self) -> Cycle<V> {
         let mut map = BiMap::new();
         for g in self.ground.iter() {
-            map.insert(g.clone(), g.clone());
+            map.insert(*g, *g);
         }
         Cycle::new(map, self.ground.clone())
     }
@@ -78,8 +78,8 @@ where
     fn get_generator(&self) -> Vec<Cycle<V>> {
         let mut adj_transpositions = Vec::new();
         for window in self.ground.windows(2) {
-            let prev = window[0].clone();
-            let curr = window[1].clone();
+            let prev = window[0];
+            let curr = window[1];
             let mut map = BiMap::new();
             map.insert(prev, curr);
             map.insert(curr, prev);
