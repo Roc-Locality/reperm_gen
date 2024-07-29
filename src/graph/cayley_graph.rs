@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn group_action() {
         let ground: Vec<i32> = vec![1, 2, 3, 4, 5];
-        let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len() as i32, ground.clone());
+        let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len(), ground.clone());
         
         let mut s5_group: CayleyGraph<i32> = CayleyGraph::new(&group);
 
