@@ -1,7 +1,7 @@
 use crate::bimap;
 
 use bimap::BiMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug};
 use std::hash::Hash;
 use std::ops::Mul;
@@ -121,6 +121,20 @@ where
         cycles
     }
 
+    pub fn inversions(&self) -> usize 
+    where T: PartialOrd
+    {
+        let mut inv = 0;
+        for i in (0..self.n).rev() {
+            for j in i+1..self.n {
+                if self.h[i] > self.h[j] {
+                    inv += 1;
+                }
+            }
+        }
+        inv
+    }
+
     pub fn display(&self) -> String 
         where T: ToString
     {
@@ -202,7 +216,7 @@ where
 mod tests {
     use std::collections::HashSet;
 
-    use crate::group::cycle::Cycle;
+    use crate::group::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
 
     #[test]
     fn construction1() {
@@ -321,5 +335,29 @@ mod tests {
         let f = Cycle::from(vec![vec![1, 5], vec![2, 4]], ground.clone());
         let output: Vec<i32> = ground.into_iter().map(|x| f.eval(x)).collect();
         debug_assert_eq!(output, vec![5, 4, 3, 2, 1]);
+    }
+
+    #[test]
+    fn inversions() {
+        let ground = vec![1, 2, 3, 4];
+        let s_4 = SymmetricGroup::new(ground.len(), ground);
+        debug_assert_eq!(s_4.identity().inversions(), 0);
+        let gen0 = s_4.create_vec(vec![vec![1,2]]);
+        let gen1 = s_4.create_vec(vec![vec![2,3]]);
+        let gen2 = s_4.create_vec(vec![vec![3,4]]);
+        debug_assert_eq!((s_4.identity() * gen0.clone()).inversions(), 1);
+        debug_assert_eq!((s_4.identity() * gen1.clone()).inversions(), 1);
+        debug_assert_eq!((s_4.identity() * gen2.clone()).inversions(), 1);
+        debug_assert_eq!((gen0.clone() * s_4.identity()).inversions(), 1);
+        debug_assert_eq!((gen1.clone() * s_4.identity()).inversions(), 1);
+        debug_assert_eq!((gen2.clone() * s_4.identity()).inversions(), 1);
+
+        debug_assert_eq!((s_4.identity() * gen0.clone() * gen1.clone()).inversions(), 2);
+        debug_assert_eq!((s_4.identity() * gen1.clone() * gen0.clone()).inversions(), 2);
+        debug_assert_eq!((s_4.identity() * gen1.clone() * gen2.clone()).inversions(), 2);
+        debug_assert_eq!((s_4.identity() * gen1.clone() * gen2.clone()).inversions(), 2);
+        debug_assert_eq!((s_4.identity() * gen2.clone() * gen1.clone()).inversions(), 2);
+
+        debug_assert_eq!(s_4.create_vec(vec![vec![1, 4], vec![2, 3]]).inversions(), 6);
     }
 }
