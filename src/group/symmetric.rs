@@ -76,18 +76,14 @@ where
     /// In Symmetric Groups, we can generate every single n! possible permutations by only combining and adding adjacent transpositions, ie (a_i, a_{i + 1}) for all i.
     /// We can also perhaps use a different class of generators, but this is fine for now.
     fn get_generator(&self) -> Vec<Cycle<V>> {
-        let mut adj_transpositions = Vec::new();
-        for window in self.ground.windows(2) {
+        self.ground.windows(2).map(|window| {
             let prev = window[0];
             let curr = window[1];
             let mut map = BiMap::new();
             map.insert(prev, curr);
             map.insert(curr, prev);
-            let adj_t = Cycle::new(map, self.ground.clone());
-            adj_transpositions.push(adj_t);
-        }
-
-        adj_transpositions
+            Cycle::new(map, self.ground.clone())
+        }).collect()
     }
 }
 
