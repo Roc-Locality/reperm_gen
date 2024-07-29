@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 /// This will calculate the forward distance.
 /// This is done by looking ahead and refreshing the last seen index in its calculation.
 /// (similar to live analysis, where we read backwards)
-fn calculate_reuse_distance<T>(trace: &Vec<T>) -> Vec<i32>
+fn calculate_reuse_distance<T>(trace: &[T]) -> Vec<i32>
 where T: Clone+Eq+Hash+Debug
 {
     let mut reuse_sets: HashMap<&T, HashSet<&T>> = HashMap::new();
