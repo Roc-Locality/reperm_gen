@@ -7,6 +7,7 @@ use std::collections::{HashMap, HashSet};
 /// This will calculate the forward distance.
 /// This is done by looking ahead and refreshing the last seen index in its calculation.
 /// (similar to live analysis, where we read backwards)
+#[allow(unused)]
 fn calculate_reuse_distance<T>(trace: &[T]) -> Vec<i32>
 where T: Clone+Eq+Hash+Debug
 {
@@ -33,6 +34,7 @@ where T: Clone+Eq+Hash+Debug
     reuse_distance
 }
 
+#[allow(unused)]
 fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
     where T: Clone+Eq+Hash+Debug
 {
@@ -42,6 +44,7 @@ fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
         .count()
 }
 
+#[allow(unused)]
 fn calculate_lru_hits_formula(data_items: i128, cache_size: i128, hits: i128) -> i128 {
     if 2 * cache_size <=  data_items + hits {
         let m = data_items;
@@ -54,6 +57,7 @@ fn calculate_lru_hits_formula(data_items: i128, cache_size: i128, hits: i128) ->
     }
 }
 
+#[allow(unused)]
 fn calculate_dmc<T>(trace: &Vec<T>) -> f64
 where T: Clone+Eq+Hash+Debug
 {

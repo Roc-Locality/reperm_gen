@@ -1,7 +1,7 @@
 use crate::bimap;
 
 use bimap::BiMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::{self, Debug};
 use std::hash::Hash;
 use std::ops::Mul;

@@ -73,9 +73,10 @@ where
 
 
 mod tests {
+    #[allow(unused_imports)]
     use crate::{graph::cayley_graph::CayleyGraph, group::{cycle::Cycle, symmetric::SymmetricGroup}};
+    #[allow(unused_imports)]
     use crate::bimap;
-    use super::ActionGraph;
 
     #[test]
     fn group_action() {

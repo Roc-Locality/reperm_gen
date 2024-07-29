@@ -88,6 +88,7 @@ where
 }
 
 mod tests {
+    #[allow(unused_imports)]
     use crate::group::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
 
     #[test]
