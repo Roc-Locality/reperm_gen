@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 bimap = "0.6.3"
+clap = "4.5.11"
 petgraph = "0.6.4"
