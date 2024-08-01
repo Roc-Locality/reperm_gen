@@ -1,15 +1,15 @@
-use crate::math::combinations::{factorial, combinations};
+use crate::math::combinations::{combinations, factorial};
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::collections::{HashMap, HashSet};
-
 
 /// This will calculate the forward distance.
 /// This is done by looking ahead and refreshing the last seen index in its calculation.
 /// (similar to live analysis, where we read backwards)
 #[allow(unused)]
 fn calculate_reuse_distance<T>(trace: &[T]) -> Vec<i32>
-where T: Clone+Eq+Hash+Debug
+where
+    T: Clone + Eq + Hash + Debug,
 {
     let mut reuse_sets: HashMap<&T, HashSet<&T>> = HashMap::new();
     let mut reuse_distance: Vec<i32> = Vec::new();
@@ -23,21 +23,23 @@ where T: Clone+Eq+Hash+Debug
                 let size = reuse_set.len() as i32;
                 reuse_distance.push(size);
                 reuse_set.clear();
-            },
+            }
             None => {
                 reuse_sets.insert(access, HashSet::new());
                 reuse_distance.push(-1);
-            },
+            }
         }
     }
     reuse_distance.reverse();
     reuse_distance
 }
 
-pub fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
-    where T: Clone+Eq+Hash+Debug
+pub fn calculate_lru_hits<T>(trace: &[T], cache_size: usize) -> usize
+where
+    T: Clone + Eq + Hash + Debug,
 {
-    calculate_reuse_distance(trace).into_iter()
+    calculate_reuse_distance(trace)
+        .into_iter()
         .filter(|x| *x != -1)
         .filter(|x| *x <= cache_size as i32)
         .count()
@@ -45,7 +47,7 @@ pub fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
 
 #[allow(unused)]
 fn calculate_lru_hits_formula(data_items: i128, cache_size: i128, hits: i128) -> i128 {
-    if 2 * cache_size <=  data_items + hits {
+    if 2 * cache_size <= data_items + hits {
         let m = data_items;
         let c = cache_size;
         let h = hits;
@@ -57,10 +59,12 @@ fn calculate_lru_hits_formula(data_items: i128, cache_size: i128, hits: i128) ->
 }
 
 #[allow(unused)]
-fn calculate_dmc<T>(trace: &Vec<T>) -> f64
-where T: Clone+Eq+Hash+Debug
+fn calculate_dmc<T>(trace: &[T]) -> f64
+where
+    T: Clone + Eq + Hash + Debug,
 {
-    calculate_reuse_distance(trace).into_iter()
+    calculate_reuse_distance(trace)
+        .into_iter()
         .filter(|x| *x != -1)
         .map(|x| (x as f64).sqrt())
         .sum()
@@ -74,7 +78,7 @@ mod tests {
     use crate::locality::reuse::factorial;
 
     use super::calculate_lru_hits_formula;
-    
+
     #[test]
     fn simple_trace() {
         let trace = vec!["a", "b", "c", "b", "d", "c", "a"];
@@ -93,10 +97,22 @@ mod tests {
     #[test]
     fn simple_trace_hits_1() {
         let cache_size = 2;
-        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 1, 2, 3, 4], cache_size), 0);
-        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 2, 1, 3, 4], cache_size), 0);
-        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 1, 3, 2, 4], cache_size), 1);
-        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 1, 2, 4, 3], cache_size), 0);
+        debug_assert_eq!(
+            calculate_lru_hits(&vec![1, 2, 3, 4, 1, 2, 3, 4], cache_size),
+            0
+        );
+        debug_assert_eq!(
+            calculate_lru_hits(&vec![1, 2, 3, 4, 2, 1, 3, 4], cache_size),
+            0
+        );
+        debug_assert_eq!(
+            calculate_lru_hits(&vec![1, 2, 3, 4, 1, 3, 2, 4], cache_size),
+            0
+        );
+        debug_assert_eq!(
+            calculate_lru_hits(&vec![1, 2, 3, 4, 1, 2, 4, 3], cache_size),
+            0
+        );
     }
 
     #[test]
@@ -104,10 +120,11 @@ mod tests {
         let data_items = 7;
         let cache_size = 5;
 
-        let a: i128 = (0..=cache_size).into_iter()
+        let a: i128 = (0..=cache_size)
+            .into_iter()
             .map(|h| calculate_lru_hits_formula(data_items, cache_size, h))
             .sum();
-        
+
         debug_assert_eq!(a, factorial(data_items));
     }
 
@@ -116,10 +133,11 @@ mod tests {
         let data_items = 19;
         let cache_size = 2;
 
-        let a: i128 = (0..=cache_size).into_iter()
+        let a: i128 = (0..=cache_size)
+            .into_iter()
             .map(|h| calculate_lru_hits_formula(data_items, cache_size, h))
             .sum();
-        
+
         debug_assert_eq!(a, factorial(data_items));
     }
 
@@ -128,13 +146,13 @@ mod tests {
         let data_items = 33;
         let cache_size = 4;
 
-        let a: i128 = (0..=cache_size).into_iter()
+        let a: i128 = (0..=cache_size)
+            .into_iter()
             .map(|h| calculate_lru_hits_formula(data_items, cache_size, h))
             .sum();
-        
+
         debug_assert_eq!(a, factorial(data_items));
     }
-    
 
     #[test]
     fn cyclic() {
@@ -154,7 +172,7 @@ mod tests {
     fn simple_trace_dmc() {
         let trace = vec!["a", "b", "c", "b", "d", "c", "a"];
         let dmc = calculate_dmc(&trace);
-        
+
         debug_assert_eq!(dmc, f64::sqrt(4.0) + f64::sqrt(3.0) + f64::sqrt(2.0));
     }
 }

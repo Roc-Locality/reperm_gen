@@ -1,15 +1,15 @@
-use std::hash::Hash;
-use std::fmt::Debug;
 use bimap::{BiHashMap, BiMap};
+use std::fmt::Debug;
+use std::hash::Hash;
 
-use crate::group::group::Group;
-use crate::group::cycle::Cycle;
+use crate::group_theory::cycle::Cycle;
+use crate::group_theory::group::Group;
 
 pub fn sym(n_size: i32) -> SymmetricGroup<i32> {
-    let ground: Vec<i32> = (1..=n_size).collect();
+    let g: Vec<i32> = (1..=n_size).collect();
     SymmetricGroup {
         n: n_size as usize,
-        ground: ground,
+        ground: g,
     }
 }
 
@@ -19,9 +19,9 @@ pub struct SymmetricGroup<V> {
     n: usize,
     ground: Vec<V>,
 }
-impl<V> SymmetricGroup<V> 
+impl<V> SymmetricGroup<V>
 where
-    V: Clone+Copy+Hash+Eq+PartialEq+Debug
+    V: Clone + Copy + Hash + Eq + PartialEq + Debug,
 {
     pub fn new(n_size: usize, g: Vec<V>) -> SymmetricGroup<V> {
         SymmetricGroup {
@@ -41,20 +41,20 @@ where
 
     pub fn create_vec(&self, lis: Vec<Vec<V>>) -> Cycle<V> {
         Cycle::from(lis, self.get_ground())
-    } 
+    }
 
     pub fn create_retraversal(&self, retraversal: Vec<V>) -> Cycle<V> {
         Cycle::from_retraversal(&retraversal, &self.ground)
     }
-    
+
     pub fn ground_size(&self) -> usize {
         self.ground.len()
     }
 }
-#[allow(dead_code)]
-impl<V> Group<Cycle<V>> for SymmetricGroup<V> 
-where 
-    V: Clone+Copy+Hash+Eq+PartialEq+Debug
+
+impl<V> Group<Cycle<V>> for SymmetricGroup<V>
+where
+    V: Clone + Copy + Hash + Eq + PartialEq + Debug,
 {
     ///Note this operation is from right to left (like normal functions)
     ///We will also assume that if Cycle<V> is implemented correctly, it is properly associative.
@@ -83,36 +83,57 @@ where
     /// In Symmetric Groups, we can generate every single n! possible permutations by only combining and adding adjacent transpositions, ie (a_i, a_{i + 1}) for all i.
     /// We can also perhaps use a different class of generators, but this is fine for now.
     fn get_generator(&self) -> Vec<Cycle<V>> {
-        self.ground.windows(2).map(|window| {
-            let prev = window[0];
-            let curr = window[1];
-            let mut map = BiMap::new();
-            map.insert(prev, curr);
-            map.insert(curr, prev);
-            Cycle::new(map, self.ground.clone())
-        }).collect()
+        self.ground
+            .windows(2)
+            .map(|window| {
+                let prev = window[0];
+                let curr = window[1];
+                let mut map = BiMap::new();
+                map.insert(prev, curr);
+                map.insert(curr, prev);
+                Cycle::new(map, self.ground.clone())
+            })
+            .collect()
     }
 }
 
 mod tests {
     #[allow(unused_imports)]
-    use crate::group::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
+    use crate::group_theory::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
 
     #[test]
-    fn test_symmetric_3() { 
+    fn test_symmetric_3() {
         let ground: Vec<i32> = vec![1, 2, 3];
         let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len(), ground.clone());
         let symmetric_set = group.get_set();
-        
-        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![1, 2, 3]], ground.clone())), true);
-        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![1, 2]], ground.clone())), true);
-        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![1, 3]], ground.clone())), true);
-        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![2, 3]], ground.clone())), true);
-        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![3, 2, 1]], ground.clone())), true);
-        debug_assert_eq!(symmetric_set.contains(&Cycle::from(vec![vec![3, 1, 2]], ground.clone())), true);
+
+        debug_assert_eq!(
+            symmetric_set.contains(&Cycle::from(vec![vec![1, 2, 3]], ground.clone())),
+            true
+        );
+        debug_assert_eq!(
+            symmetric_set.contains(&Cycle::from(vec![vec![1, 2]], ground.clone())),
+            true
+        );
+        debug_assert_eq!(
+            symmetric_set.contains(&Cycle::from(vec![vec![1, 3]], ground.clone())),
+            true
+        );
+        debug_assert_eq!(
+            symmetric_set.contains(&Cycle::from(vec![vec![2, 3]], ground.clone())),
+            true
+        );
+        debug_assert_eq!(
+            symmetric_set.contains(&Cycle::from(vec![vec![3, 2, 1]], ground.clone())),
+            true
+        );
+        debug_assert_eq!(
+            symmetric_set.contains(&Cycle::from(vec![vec![3, 1, 2]], ground.clone())),
+            true
+        );
     }
     #[test]
-    fn test_symmetric_5() { 
+    fn test_symmetric_5() {
         let ground: Vec<i32> = vec![1, 2, 3, 4, 5];
         let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len(), ground.clone());
         let symmetric_set = group.get_set();
@@ -121,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn test_symmetric_8() { 
+    fn test_symmetric_8() {
         let ground: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let group: SymmetricGroup<i32> = SymmetricGroup::new((&ground).len(), ground.clone());
         let symmetric_set = group.get_set();

@@ -3,12 +3,12 @@
 ///Meaning that the set yielded is from same domain as the single operand.
 ///This generator is supposed to be as self contained as possible, so that if you want
 ///to add other ways of manipulating the trace outside of using a symmetric group.
-pub trait Generator<'a, T> 
-where 
-    T: PartialEq+Sized+Clone
+pub trait Generator<'a, T>
+where
+    T: PartialEq + Sized + Clone,
 {
     fn start(&self) -> Vec<T>;
-    fn set_start(&mut self, start: &Vec<T>);
+    fn set_start(&mut self, start: &[T]);
     /// This is supposed to manage adding some function to the generator.
     fn add(&mut self, f: Box<dyn Fn(T) -> T>);
     /// This clears the list of permutations.
@@ -24,5 +24,5 @@ where
             }
         }
         out
-    } 
+    }
 }

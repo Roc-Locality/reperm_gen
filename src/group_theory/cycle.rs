@@ -6,12 +6,11 @@ use std::fmt::{self, Debug};
 use std::hash::Hash;
 use std::ops::Mul;
 
-
 ///For permutations
 #[derive(Clone, Debug, Eq)]
-pub struct Cycle<T> 
-where 
-    T: Clone+Hash+Eq+'static
+pub struct Cycle<T>
+where
+    T: Clone + Hash + Eq + 'static,
 {
     ground: Vec<T>,
     ///this is the max cycle size
@@ -22,25 +21,30 @@ where
     h: Vec<T>,
 }
 
-impl<T> Cycle<T> 
-where 
-    T: Debug+Clone+Eq+Hash+'static
+impl<T> Cycle<T>
+where
+    T: Debug + Clone + Eq + Hash + 'static,
 {
     pub fn new(map: BiMap<T, T>, ground: Vec<T>) -> Self {
         let mut new_map = map.clone();
         let size = ground.len();
         if map.len() != size {
-            (&ground).iter()
+            ground
+                .iter()
                 .filter(|g| !map.contains_left(g))
                 .for_each(|g: &T| {
                     new_map.insert(g.clone(), g.clone());
-            });
+                });
         }
-        Cycle { 
+        Cycle {
             ground: ground.clone(),
             n: size,
             map: new_map.clone(),
-            h: ground.into_iter().map(|x| new_map.get_by_left(&x).unwrap()).cloned().collect()
+            h: ground
+                .into_iter()
+                .map(|x| new_map.get_by_left(&x).unwrap())
+                .cloned()
+                .collect(),
         }
     }
 
@@ -51,10 +55,9 @@ where
             for window in cycle.windows(2) {
                 let prev = window[0].clone();
                 let curr = window[1].clone();
-                
+
                 set.remove(&prev);
                 map.insert(prev, curr);
-                
             }
             if let (Some(last), Some(first)) = (cycle.last(), cycle.first()) {
                 set.remove(last);
@@ -66,24 +69,34 @@ where
                 map.insert(e.clone(), e.clone());
             }
         }
-        
+
         Cycle {
             ground: ground.clone(),
             n: map.len(),
             map: map.clone(),
-            h: ground.into_iter().map(|x| map.get_by_left(&x).unwrap()).cloned().collect()
+            h: ground
+                .into_iter()
+                .map(|x| map.get_by_left(&x).unwrap())
+                .cloned()
+                .collect(),
         }
     }
 
-    pub fn from_retraversal(vec: &Vec<T>, ground: &Vec<T>) -> Self {
+    pub fn from_retraversal(vec: &[T], ground: &Vec<T>) -> Self {
         assert_eq!(vec.len(), ground.len());
-        assert_eq!(vec.into_iter().collect::<HashSet<_>>(), ground.into_iter().collect::<HashSet<_>>());
-        Self::new(vec.into_iter().zip(ground.into_iter()).fold(BiMap::new(), |mut map, ab| {
-            map.insert(ab.1.clone(), ab.0.clone());
-            map
-        }), ground.clone())
+        assert_eq!(
+            vec.iter().collect::<HashSet<_>>(),
+            ground.iter().collect::<HashSet<_>>()
+        );
+        Self::new(
+            vec.iter().zip(ground).fold(BiMap::new(), |mut map, ab| {
+                map.insert(ab.1.clone(), ab.0.clone());
+                map
+            }),
+            ground.clone(),
+        )
     }
-    
+
     pub fn inverse(&self) -> Self {
         let mut co = BiMap::new();
         for g in self.ground.clone() {
@@ -95,15 +108,13 @@ where
     pub fn eval(&self, i: T) -> T {
         match self.map.get_by_left(&i) {
             Some(res) => res.clone(),
-            _ => i // if it doesn't match, we will make an assumption here that it will just return the same thing
+            _ => i, // if it doesn't match, we will make an assumption here that it will just return the same thing
         }
     }
 
     pub fn get_function(&self) -> Box<dyn Fn(T) -> T> {
         let m = self.map.clone();
-        Box::new(move |e| {
-            m.get_by_left(&e).unwrap().clone()
-        })
+        Box::new(move |e| m.get_by_left(&e).unwrap().clone())
     }
 
     /// This yields the cycle representation, aka (123),(435), etc
@@ -121,7 +132,7 @@ where
                 cycle.push(curr.clone());
                 curr = self.map.get_by_left(curr).unwrap();
             }
-            
+
             if !cycle.is_empty() && (cycle.len() != 1 || show_one) {
                 cycles.push(cycle);
             }
@@ -129,12 +140,13 @@ where
         cycles
     }
 
-    pub fn inversions(&self) -> usize 
-    where T: PartialOrd
+    pub fn inversions(&self) -> usize
+    where
+        T: PartialOrd,
     {
         let mut inv = 0;
         for i in (0..self.n).rev() {
-            for j in i+1..self.n {
+            for j in i + 1..self.n {
                 if self.h[i] > self.h[j] {
                     inv += 1;
                 }
@@ -143,8 +155,9 @@ where
         inv
     }
 
-    pub fn display(&self) -> String 
-        where T: ToString
+    pub fn display(&self) -> String
+    where
+        T: ToString,
     {
         let mut out = String::from("");
         for cycle in self.get_cycle_representation(false).into_iter() {
@@ -161,46 +174,55 @@ where
     }
 }
 
-impl<T> Mul for Cycle<T> 
-where 
-    T: Clone+Hash+Eq+Debug
+impl<T> Mul for Cycle<T>
+where
+    T: Clone + Hash + Eq + Debug,
 {
     type Output = Cycle<T>;
 
     fn mul(self, rhs: Cycle<T>) -> Self::Output {
         if self.ground.len() != rhs.ground.len() {
-            panic!("The cycles being multiplied have the wrong ground sets! {:?} vs {:?}", self.ground.len(), rhs.ground.len());
+            panic!(
+                "The cycles being multiplied have the wrong ground sets! {:?} vs {:?}",
+                self.ground.len(),
+                rhs.ground.len()
+            );
         }
         let same_ground = self.ground.clone();
 
         let mut new_map: BiMap<T, T> = BiMap::new();
 
-        
         for g in self.ground {
-            let pcyc = match rhs.map.get_by_left(&g).and_then(|f| self.map.get_by_left(f)) {
+            let pcyc = match rhs
+                .map
+                .get_by_left(&g)
+                .and_then(|f| self.map.get_by_left(f))
+            {
                 Some(res) => res.clone(),
-                None => panic!("Compositions should not be empty! query: {:?} rhs: {:?}, lhs: {:?}", g, rhs.map, self.map)
+                None => panic!(
+                    "Compositions should not be empty! query: {:?} rhs: {:?}, lhs: {:?}",
+                    g, rhs.map, self.map
+                ),
             };
             new_map.insert(g, pcyc);
         }
-        
+
         Cycle::new(new_map, same_ground)
     }
 }
 
-
-impl<T> PartialEq for Cycle<T> 
-where 
-    T: Clone+Hash+Eq
+impl<T> PartialEq for Cycle<T>
+where
+    T: Clone + Hash + Eq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.map.eq(&other.map)
     }
-}   
+}
 
 impl<T> Hash for Cycle<T>
 where
-    T: Clone+Hash+Eq+Debug
+    T: Clone + Hash + Eq + Debug,
 {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         //self.ground.hash(state);
@@ -209,8 +231,8 @@ where
     }
 }
 impl<T> fmt::Display for Cycle<T>
-where 
-    T: Clone+Hash+Eq+Debug+ToString
+where
+    T: Clone + Hash + Eq + Debug + ToString,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.display())
@@ -219,19 +241,18 @@ where
 
 /// Tests, mainly associative
 
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
 
-    use crate::group::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
+    use crate::group_theory::{cycle::Cycle, group::Group, symmetric::SymmetricGroup};
 
     #[test]
     fn construction1() {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 3], vec![4, 5]], ground.clone());
         let g = Cycle::from(vec![vec![1, 2, 5], vec![3, 4]], ground.clone());
-        // f = 1 3 4 5 
+        // f = 1 3 4 5
         //     3 1 5 4
         // g = 1 2 5 3 4
         //     2 5 1 4 3
@@ -243,7 +264,7 @@ mod tests {
     fn construction2() {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 2]], ground.clone());
-        // f = 1 3 4 5 
+        // f = 1 3 4 5
         //     3 1 5 4
         debug_assert_eq!(f.map, crate::bimap![1 => 2, 2 => 1, 3 => 3, 4 => 4, 5 => 5]);
     }
@@ -252,18 +273,30 @@ mod tests {
     fn construction3() {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 2], vec![3, 4]], ground.clone());
-        
-        debug_assert_eq!(f.get_cycle_representation(true), vec![vec![1, 2], vec![3, 4], vec![5]]);
-        debug_assert_eq!(f.get_cycle_representation(false), vec![vec![1, 2], vec![3, 4]]);
+
+        debug_assert_eq!(
+            f.get_cycle_representation(true),
+            vec![vec![1, 2], vec![3, 4], vec![5]]
+        );
+        debug_assert_eq!(
+            f.get_cycle_representation(false),
+            vec![vec![1, 2], vec![3, 4]]
+        );
     }
 
     #[test]
     fn construction4() {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 5], vec![2, 4], vec![3]], ground.clone());
-        
-        debug_assert_eq!(f.get_cycle_representation(true), vec![vec![1, 5], vec![2, 4], vec![3]]);
-        debug_assert_eq!(f.get_cycle_representation(false), vec![vec![1, 5], vec![2, 4]]);
+
+        debug_assert_eq!(
+            f.get_cycle_representation(true),
+            vec![vec![1, 5], vec![2, 4], vec![3]]
+        );
+        debug_assert_eq!(
+            f.get_cycle_representation(false),
+            vec![vec![1, 5], vec![2, 4]]
+        );
     }
 
     #[test]
@@ -278,7 +311,7 @@ mod tests {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 5], vec![4, 2]], ground.clone());
         let func = f.get_function();
-        
+
         debug_assert_eq!(func(3), 3);
         debug_assert_eq!(func(1), 5);
         debug_assert_eq!(func(5), 1);
@@ -291,7 +324,7 @@ mod tests {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![]], ground.clone());
         let func = f.get_function();
-        
+
         debug_assert_eq!(func(1), 1);
         debug_assert_eq!(func(2), 2);
         debug_assert_eq!(func(3), 3);
@@ -319,7 +352,7 @@ mod tests {
     fn contains_hash() {
         let ground = vec![1, 2, 3, 4, 5];
         let f = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
-        
+
         let g = Cycle::from(vec![vec![1, 2, 3, 4, 5]], ground.clone());
         debug_assert_eq!(f.clone(), g.clone());
         let mut set = HashSet::new();
@@ -333,7 +366,7 @@ mod tests {
         let f = Cycle::from(vec![vec![1, 3], vec![4, 5]], ground.clone());
         let g = Cycle::from(vec![vec![1, 2, 5], vec![3, 4]], ground.clone());
         let fg: Cycle<_> = Cycle::from(vec![vec![1, 2, 4], vec![3, 5]], ground.clone());
-        
+
         debug_assert_eq!((f * g).map, fg.map);
     }
 
@@ -350,9 +383,9 @@ mod tests {
         let ground = vec![1, 2, 3, 4];
         let s_4 = SymmetricGroup::new(ground.len(), ground);
         debug_assert_eq!(s_4.identity().inversions(), 0);
-        let gen0 = s_4.create_vec(vec![vec![1,2]]);
-        let gen1 = s_4.create_vec(vec![vec![2,3]]);
-        let gen2 = s_4.create_vec(vec![vec![3,4]]);
+        let gen0 = s_4.create_vec(vec![vec![1, 2]]);
+        let gen1 = s_4.create_vec(vec![vec![2, 3]]);
+        let gen2 = s_4.create_vec(vec![vec![3, 4]]);
         debug_assert_eq!((s_4.identity() * gen0.clone()).inversions(), 1);
         debug_assert_eq!((s_4.identity() * gen1.clone()).inversions(), 1);
         debug_assert_eq!((s_4.identity() * gen2.clone()).inversions(), 1);
@@ -360,11 +393,26 @@ mod tests {
         debug_assert_eq!((gen1.clone() * s_4.identity()).inversions(), 1);
         debug_assert_eq!((gen2.clone() * s_4.identity()).inversions(), 1);
 
-        debug_assert_eq!((s_4.identity() * gen0.clone() * gen1.clone()).inversions(), 2);
-        debug_assert_eq!((s_4.identity() * gen1.clone() * gen0.clone()).inversions(), 2);
-        debug_assert_eq!((s_4.identity() * gen1.clone() * gen2.clone()).inversions(), 2);
-        debug_assert_eq!((s_4.identity() * gen1.clone() * gen2.clone()).inversions(), 2);
-        debug_assert_eq!((s_4.identity() * gen2.clone() * gen1.clone()).inversions(), 2);
+        debug_assert_eq!(
+            (s_4.identity() * gen0.clone() * gen1.clone()).inversions(),
+            2
+        );
+        debug_assert_eq!(
+            (s_4.identity() * gen1.clone() * gen0.clone()).inversions(),
+            2
+        );
+        debug_assert_eq!(
+            (s_4.identity() * gen1.clone() * gen2.clone()).inversions(),
+            2
+        );
+        debug_assert_eq!(
+            (s_4.identity() * gen1.clone() * gen2.clone()).inversions(),
+            2
+        );
+        debug_assert_eq!(
+            (s_4.identity() * gen2.clone() * gen1.clone()).inversions(),
+            2
+        );
 
         debug_assert_eq!(s_4.create_vec(vec![vec![1, 4], vec![2, 3]]).inversions(), 6);
     }

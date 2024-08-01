@@ -1,11 +1,11 @@
-pub mod group {
-    pub mod symmetric;
-    pub mod group;
+pub mod group_theory {
     pub mod cycle;
+    pub mod group;
+    pub mod symmetric;
 }
 
 pub mod generator {
-    pub mod generator;
+    pub mod gen;
     pub mod iterative;
     pub mod periodic;
 }
@@ -19,8 +19,8 @@ pub mod math {
     pub mod combinations;
 }
 pub mod locality {
-    pub mod reuse;
     pub mod chainfind;
+    pub mod reuse;
 }
 
 pub mod macros;
