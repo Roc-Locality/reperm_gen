@@ -34,8 +34,7 @@ where T: Clone+Eq+Hash+Debug
     reuse_distance
 }
 
-#[allow(unused)]
-fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
+pub fn calculate_lru_hits<T>(trace: &Vec<T>, cache_size: usize) -> usize
     where T: Clone+Eq+Hash+Debug
 {
     calculate_reuse_distance(trace).into_iter()
@@ -89,6 +88,15 @@ mod tests {
         let cache_size = 3;
         let num_hits = calculate_lru_hits(&trace, cache_size);
         debug_assert_eq!(num_hits, 2);
+    }
+
+    #[test]
+    fn simple_trace_hits_1() {
+        let cache_size = 2;
+        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 1, 2, 3, 4], cache_size), 0);
+        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 2, 1, 3, 4], cache_size), 0);
+        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 1, 3, 2, 4], cache_size), 1);
+        debug_assert_eq!(calculate_lru_hits(&vec![1, 2, 3, 4, 1, 2, 4, 3], cache_size), 0);
     }
 
     #[test]
