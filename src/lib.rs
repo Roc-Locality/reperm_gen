@@ -20,6 +20,7 @@ pub mod math {
 }
 pub mod locality {
     pub mod reuse;
+    pub mod chainfind;
 }
 
 pub mod macros;
