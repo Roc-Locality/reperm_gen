@@ -75,6 +75,14 @@ where
         }
     }
 
+    pub fn from_retraversal(vec: &Vec<T>, ground: &Vec<T>) -> Self {
+        assert_eq!(vec.len(), ground.len());
+        assert_eq!(vec.into_iter().collect::<HashSet<_>>(), ground.into_iter().collect::<HashSet<_>>());
+        Self::new(vec.into_iter().zip(ground.into_iter()).fold(BiMap::new(), |mut map, ab| {
+            map.insert(ab.1.clone(), ab.0.clone());
+            map
+        }), ground.clone())
+    }
     
     pub fn inverse(&self) -> Self {
         let mut co = BiMap::new();

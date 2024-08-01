@@ -42,7 +42,14 @@ where
     pub fn create_vec(&self, lis: Vec<Vec<V>>) -> Cycle<V> {
         Cycle::from(lis, self.get_ground())
     } 
+
+    pub fn create_retraversal(&self, retraversal: Vec<V>) -> Cycle<V> {
+        Cycle::from_retraversal(&retraversal, &self.ground)
+    }
     
+    pub fn ground_size(&self) -> usize {
+        self.ground.len()
+    }
 }
 #[allow(dead_code)]
 impl<V> Group<Cycle<V>> for SymmetricGroup<V> 
