@@ -97,6 +97,10 @@ where
         )
     }
 
+    pub fn get_ground(&self) -> Vec<T> {
+        self.ground.clone()
+    }
+
     pub fn inverse(&self) -> Self {
         let mut co = BiMap::new();
         for g in self.ground.clone() {
