@@ -1,4 +1,6 @@
 use bimap::{BiHashMap, BiMap};
+use permutohedron::heap_recursive;
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::hash::Hash;
 
@@ -42,8 +44,8 @@ where
         Cycle::from(lis, self.get_ground())
     }
 
-    pub fn create_retraversal(&self, retraversal: Vec<V>) -> Cycle<V> {
-        Cycle::from_retraversal(&retraversal, &self.ground)
+    pub fn create_retraversal(&self, retraversal: &[V]) -> Cycle<V> {
+        Cycle::from_retraversal(retraversal, &self.ground)
     }
 
     pub fn ground_size(&self) -> usize {
@@ -55,6 +57,15 @@ impl<V> Group<Cycle<V>> for SymmetricGroup<V>
 where
     V: Clone + Copy + Hash + Eq + PartialEq + Debug,
 {
+    fn get_set(&self) -> HashSet<Cycle<V>> {
+        let mut permutations = HashSet::new();
+        let mut data = self.ground.clone();
+        heap_recursive(&mut data, |permutation| {
+            permutations.insert(self.create_retraversal(permutation));
+        });
+        permutations
+    }
+
     ///Note this operation is from right to left (like normal functions)
     ///We will also assume that if Cycle<V> is implemented correctly, it is properly associative.
     fn op(&self, a: Cycle<V>, b: Cycle<V>) -> Cycle<V> {

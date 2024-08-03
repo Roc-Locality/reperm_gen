@@ -113,7 +113,7 @@ fn main() {
 
             let mut set = group.get_set().into_iter().collect::<Vec<_>>();
             set.sort_unstable_by_key(|cycle| cycle.inversions());
-            let set = set;
+            //let set = group.get_set();
             let text: String = set
                 .par_iter()
                 .map(|retraversal| {

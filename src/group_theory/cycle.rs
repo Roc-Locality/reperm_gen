@@ -83,11 +83,13 @@ where
     }
 
     pub fn from_retraversal(vec: &[T], ground: &Vec<T>) -> Self {
-        assert_eq!(vec.len(), ground.len());
-        assert_eq!(
-            vec.iter().collect::<HashSet<_>>(),
-            ground.iter().collect::<HashSet<_>>()
-        );
+        // Commenting out checks for big numbers
+        // assert_eq!(vec.len(), ground.len());
+        // assert_eq!(
+        //     vec.iter().collect::<HashSet<_>>(),
+        //     ground.iter().collect::<HashSet<_>>()
+        // );
+
         Self::new(
             vec.iter().zip(ground).fold(BiMap::new(), |mut map, ab| {
                 map.insert(ab.1.clone(), ab.0.clone());
