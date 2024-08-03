@@ -1,4 +1,3 @@
-use bimap::BiMap;
 use clap::{Parser, Subcommand, ValueEnum};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use reperm_gen::generator::gen::Generator;
@@ -7,23 +6,21 @@ use reperm_gen::group_theory::cycle::Cycle;
 use reperm_gen::group_theory::group::Group;
 use reperm_gen::group_theory::symmetric::sym;
 use reperm_gen::locality::reuse::calculate_lru_hits;
-use std::env;
-use std::fs::File;
-use std::io::{self, stdout, BufRead, Write};
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::rc::Rc;
+use std::io::{stdout, Write};
 use std::sync::Arc;
 use tracing::{event, Level};
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, ValueEnum)]
 enum LocalityCalculator {
-    LRU
+    LRU,
 }
 
 #[derive(Parser)]
 #[command(
-    name = "symmmetric locality", 
+    name = "symmmetric locality",
     about = "symmetric locality usage: ./<binary> <command> ; ./<binary> -h for help",
     version = "1.0",
     author = "giordan escalona"
@@ -43,8 +40,8 @@ enum Commands {
         locality_calculator: LocalityCalculator,
 
         #[arg(short, long, value_delimiter = ',')]
-        cache_capacity_rankings: Vec<usize>
-    }, 
+        cache_capacity_rankings: Vec<usize>,
+    },
     FindChain {
         #[arg(short, long, value_parser)]
         symmetric_n: usize,
@@ -58,13 +55,14 @@ enum Commands {
     Simulate {
         #[arg(short, long, value_parser)]
         symmetric_n: usize,
-    }
+    },
 }
 
-fn get_calc<V, O>(calc_enum: LocalityCalculator, rankings: &[usize]) -> Arc<dyn Fn(&Cycle<V>) -> O + Send + Sync> 
-where 
+type LocalityRanker<V, O> = dyn Fn(&Cycle<V>) -> O + Send + Sync;
+fn get_calc<V, O>(calc_enum: LocalityCalculator, rankings: &[usize]) -> Arc<LocalityRanker<V, O>>
+where
     V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd,
-    O: PartialOrd + PartialEq + Ord + std::convert::From<Vec<usize>>
+    O: PartialOrd + PartialEq + Ord + std::convert::From<Vec<usize>>,
 {
     let vec = Arc::new(rankings.to_vec());
     let func = match calc_enum {
@@ -72,9 +70,10 @@ where
             let mut generator = PeriodicGen::new();
             generator.set_start(&cycle.get_ground());
             generator.add(cycle.get_function());
-            vec.iter().map(|cs| {
-                calculate_lru_hits(&generator.simulate(1), *cs)
-            }).collect::<Vec<usize>>().into()
+            vec.iter()
+                .map(|cs| calculate_lru_hits(&generator.simulate(1), *cs))
+                .collect::<Vec<usize>>()
+                .into()
         },
     };
     Arc::new(func)
@@ -85,23 +84,34 @@ fn main() {
     event!(Level::INFO, "Initialization has started");
     let cli = Cli::parse();
     match cli.command {
-        Commands::Plot{symmetric_n, locality_calculator, cache_capacity_rankings} => {
-            assert_ne!(cache_capacity_rankings.len(), 0, "Expected rankings to not be empty (Supply rankings with non empty elements)");
+        Commands::Plot {
+            symmetric_n,
+            locality_calculator,
+            cache_capacity_rankings,
+        } => {
+            assert_ne!(
+                cache_capacity_rankings.len(),
+                0,
+                "Expected rankings to not be empty (Supply rankings with non empty elements)"
+            );
             assert!(cache_capacity_rankings.iter().max().unwrap() <= &symmetric_n);
-            event!(Level::INFO, "Started trying to plot elements of the symmetric group");
-            
+            event!(
+                Level::INFO,
+                "Started trying to plot elements of the symmetric group"
+            );
+
             let group = sym(symmetric_n);
-            let locality_calc: Arc<dyn Fn(&Cycle<usize>) -> Vec<usize> + Send + Sync> = get_calc(locality_calculator, &cache_capacity_rankings);
-            let header = cache_capacity_rankings
+            let locality_calc: Arc<LocalityRanker<usize, Vec<usize>>> =
+                get_calc(locality_calculator, &cache_capacity_rankings);
+            let retraversal_header = String::from("\"retraversal\",");
+            let ranking_header = cache_capacity_rankings
                 .iter()
-                .fold(String::from("\"retraversal\","), |mut acc, x| {
-                    acc.push_str(x.to_string().as_str());
-                    acc.push_str(",");
-                    acc
-                });
-            let mut set = group.get_set()
-                .into_iter()
-                .collect::<Vec<_>>();
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+            let header = retraversal_header + &ranking_header;
+
+            let mut set = group.get_set().into_iter().collect::<Vec<_>>();
             set.sort_unstable_by_key(|cycle| cycle.inversions());
             let set = set;
             let text: String = set
@@ -111,27 +121,27 @@ fn main() {
                     (retraversal, calc(retraversal))
                 })
                 .map(|(retraversal, locality)| {
-                    let locality_str = locality.iter().fold(String::new(), |mut acc, val| {
-                        acc.push_str(val.to_string().as_str());
-                        acc.push_str(",");
-                        acc
-                    });
-                    let cycle_str: String = retraversal.get_ground()
+                    let locality_str = locality
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join(",");
+                    let cycle_str: String = retraversal
+                        .get_ground()
                         .into_iter()
                         .map(|x| retraversal.eval(x))
-                        .fold(String::new(), |mut acc, x| {
-                            acc.push_str(x.to_string().as_str());
-                            acc.push_str(",");
-                            acc
-                        });
-                    
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join(",");
+
                     format!("\"{}\",{}\n", cycle_str, locality_str)
                 })
                 .collect();
-            write!(stdout.lock(), "{}\n{}", header, text).expect("Something went wrong with writing to output")
-        },
-        Commands::FindChain { symmetric_n, locality_calculator, start } => todo!(),
-        Commands::Simulate { symmetric_n } => todo!(),
+            write!(stdout.lock(), "{}\n{}", header, text)
+                .expect("Something went wrong with writing to output")
+        }
+        Commands::FindChain { .. } => todo!(),
+        Commands::Simulate { .. } => todo!(),
     }
     /*
     let args: Vec<String> = env::args().collect();
