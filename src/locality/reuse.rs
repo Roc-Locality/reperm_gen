@@ -11,10 +11,11 @@ fn calculate_reuse_distance<T>(trace: &[T]) -> Vec<i32>
 where
     T: Clone + Eq + Hash + Debug,
 {
-    let mut reuse_sets: HashMap<&T, HashSet<&T>> = HashMap::new();
+    let n = trace.len() / 2 + 1;
+    let mut reuse_sets: HashMap<&T, HashSet<&T>> = HashMap::with_capacity(n);
     let mut reuse_distance: Vec<i32> = Vec::new();
 
-    for access in trace.iter().rev() {
+    for access in trace.iter() {
         reuse_sets.iter_mut().for_each(|(_, reuse_set)| {
             reuse_set.insert(access);
         });
@@ -25,12 +26,12 @@ where
                 reuse_set.clear();
             }
             None => {
-                reuse_sets.insert(access, HashSet::new());
+                reuse_sets.insert(access, HashSet::with_capacity(n));
                 reuse_distance.push(-1);
             }
         }
     }
-    reuse_distance.reverse();
+    
     reuse_distance
 }
 
@@ -40,8 +41,7 @@ where
 {
     calculate_reuse_distance(trace)
         .into_iter()
-        .filter(|x| *x != -1)
-        .filter(|x| *x <= cache_size as i32)
+        .filter(|x| { let y = *x; y != -1 && y <= cache_size as i32})
         .count()
 }
 
@@ -83,7 +83,7 @@ mod tests {
     fn simple_trace() {
         let trace = vec!["a", "b", "c", "b", "d", "c", "a"];
         let rd = calculate_reuse_distance(&trace);
-        debug_assert_eq!(rd, vec![4, 2, 3, -1, -1, -1, -1]);
+        debug_assert_eq!(rd, vec![-1, -1, -1, 2, -1, 3, 4,]);
     }
 
     #[test]
@@ -158,14 +158,14 @@ mod tests {
     fn cyclic() {
         let trace = vec!["a", "b", "c", "d", "a", "b", "c", "d"];
         let rd = calculate_reuse_distance(&trace);
-        debug_assert_eq!(rd, vec![4, 4, 4, 4, -1, -1, -1, -1]);
+        debug_assert_eq!(rd, vec![ -1, -1, -1, -1, 4, 4, 4, 4]);
     }
 
     #[test]
     fn sawtooth() {
         let trace = vec!["a", "b", "c", "d", "d", "c", "b", "a"];
         let rd = calculate_reuse_distance(&trace);
-        debug_assert_eq!(rd, vec![4, 3, 2, 1, -1, -1, -1, -1]);
+        debug_assert_eq!(rd, vec![ -1, -1, -1, -1, 1, 2, 3, 4]);
     }
 
     #[test]

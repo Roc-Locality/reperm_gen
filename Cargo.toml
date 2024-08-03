@@ -11,3 +11,9 @@ petgraph = "0.6.4"
 rayon = "1.10.0"
 serde = { version = "1.0.204", features = ["derive"] }
 tracing = "0.1.40"
+
+[profile.release]
+debug = true
+opt-level = 3  # Highest level of optimizations
+codegen-units = 1  # Better optimizations at the cost of compilation time
+lto = true  # Link Time Optimization

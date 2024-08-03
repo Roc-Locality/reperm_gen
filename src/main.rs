@@ -59,24 +59,25 @@ enum Commands {
 }
 
 type LocalityRanker<V, O> = dyn Fn(&Cycle<V>) -> O + Send + Sync;
-fn get_calc<V, O>(calc_enum: LocalityCalculator, rankings: &[usize]) -> Arc<LocalityRanker<V, O>>
+fn get_calc<V, O>(calc_enum: LocalityCalculator, rankings: Arc<Vec<usize>>) -> Box<LocalityRanker<V, O>>
 where
-    V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd,
+    V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + Sync,
     O: PartialOrd + PartialEq + Ord + std::convert::From<Vec<usize>>,
 {
-    let vec = Arc::new(rankings.to_vec());
     let func = match calc_enum {
         LocalityCalculator::LRU => move |cycle: &Cycle<V>| {
             let mut generator = PeriodicGen::new();
             generator.set_start(&cycle.get_ground());
             generator.add(cycle.get_function());
-            vec.iter()
-                .map(|cs| calculate_lru_hits(&generator.simulate(1), *cs))
+            let simulated = generator.simulate(1);
+            
+            rankings.par_iter()
+                .map(|cs| calculate_lru_hits(&simulated, *cs))
                 .collect::<Vec<usize>>()
                 .into()
         },
     };
-    Arc::new(func)
+    Box::new(func)
 }
 
 fn main() {
@@ -99,10 +100,11 @@ fn main() {
                 Level::INFO,
                 "Started trying to plot elements of the symmetric group"
             );
-
+            let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
+            let clone = Arc::clone(&cache_capacity_rankings);
             let group = sym(symmetric_n);
-            let locality_calc: Arc<LocalityRanker<usize, Vec<usize>>> =
-                get_calc(locality_calculator, &cache_capacity_rankings);
+            let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
+                get_calc(locality_calculator, clone);
             let retraversal_header = String::from("\"retraversal\",");
             let ranking_header = cache_capacity_rankings
                 .iter()
@@ -111,14 +113,13 @@ fn main() {
                 .join(",");
             let header = retraversal_header + &ranking_header;
 
-            let mut set = group.get_set().into_iter().collect::<Vec<_>>();
-            set.sort_unstable_by_key(|cycle| cycle.inversions());
-            //let set = group.get_set();
+            //let mut set = group.get_set().into_iter().collect::<Vec<_>>();
+            //set.sort_unstable_by_key(|cycle| cycle.inversions());
+            let set = group.get_set();
             let text: String = set
                 .par_iter()
                 .map(|retraversal| {
-                    let calc = Arc::clone(&locality_calc);
-                    (retraversal, calc(retraversal))
+                    (retraversal, locality_calc(retraversal))
                 })
                 .map(|(retraversal, locality)| {
                     let locality_str = locality
