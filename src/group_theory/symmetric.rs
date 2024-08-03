@@ -5,11 +5,10 @@ use std::hash::Hash;
 use crate::group_theory::cycle::Cycle;
 use crate::group_theory::group::Group;
 
-pub fn sym(n_size: i32) -> SymmetricGroup<i32> {
-    let g: Vec<i32> = (1..=n_size).collect();
+pub fn sym(n_size: usize) -> SymmetricGroup<usize> {
     SymmetricGroup {
-        n: n_size as usize,
-        ground: g,
+        n: n_size,
+        ground: (1..=n_size).collect(),
     }
 }
 
