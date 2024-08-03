@@ -7,3 +7,6 @@ edition = "2021"
 bimap = "0.6.3"
 clap = { version = "4.5.13", features = ["derive"] }
 petgraph = "0.6.4"
+rayon = "1.10.0"
+serde = { version = "1.0.204", features = ["derive"] }
+tracing = "0.1.40"
