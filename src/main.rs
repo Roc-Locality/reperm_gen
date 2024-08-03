@@ -59,7 +59,10 @@ enum Commands {
 }
 
 type LocalityRanker<V, O> = dyn Fn(&Cycle<V>) -> O + Send + Sync;
-fn get_calc<V, O>(calc_enum: LocalityCalculator, rankings: Arc<Vec<usize>>) -> Box<LocalityRanker<V, O>>
+fn get_calc<V, O>(
+    calc_enum: LocalityCalculator,
+    rankings: Arc<Vec<usize>>,
+) -> Box<LocalityRanker<V, O>>
 where
     V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + Sync,
     O: PartialOrd + PartialEq + Ord + std::convert::From<Vec<usize>>,
@@ -70,8 +73,9 @@ where
             generator.set_start(&cycle.get_ground());
             generator.add(cycle.get_function());
             let simulated = generator.simulate(1);
-            
-            rankings.par_iter()
+
+            rankings
+                .par_iter()
                 .map(|cs| calculate_lru_hits(&simulated, *cs))
                 .collect::<Vec<usize>>()
                 .into()
@@ -118,9 +122,7 @@ fn main() {
             let set = group.get_set();
             let text: String = set
                 .par_iter()
-                .map(|retraversal| {
-                    (retraversal, locality_calc(retraversal))
-                })
+                .map(|retraversal| (retraversal, locality_calc(retraversal)))
                 .map(|(retraversal, locality)| {
                     let locality_str = locality
                         .iter()

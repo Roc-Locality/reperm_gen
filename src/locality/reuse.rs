@@ -31,7 +31,7 @@ where
             }
         }
     }
-    
+
     reuse_distance
 }
 
@@ -41,7 +41,10 @@ where
 {
     calculate_reuse_distance(trace)
         .into_iter()
-        .filter(|x| { let y = *x; y != -1 && y <= cache_size as i32})
+        .filter(|x| {
+            let y = *x;
+            y != -1 && y <= cache_size as i32
+        })
         .count()
 }
 
@@ -158,14 +161,14 @@ mod tests {
     fn cyclic() {
         let trace = vec!["a", "b", "c", "d", "a", "b", "c", "d"];
         let rd = calculate_reuse_distance(&trace);
-        debug_assert_eq!(rd, vec![ -1, -1, -1, -1, 4, 4, 4, 4]);
+        debug_assert_eq!(rd, vec![-1, -1, -1, -1, 4, 4, 4, 4]);
     }
 
     #[test]
     fn sawtooth() {
         let trace = vec!["a", "b", "c", "d", "d", "c", "b", "a"];
         let rd = calculate_reuse_distance(&trace);
-        debug_assert_eq!(rd, vec![ -1, -1, -1, -1, 1, 2, 3, 4]);
+        debug_assert_eq!(rd, vec![-1, -1, -1, -1, 1, 2, 3, 4]);
     }
 
     #[test]
