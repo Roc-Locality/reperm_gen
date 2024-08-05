@@ -56,7 +56,7 @@ enum Commands {
         #[arg(short, long, value_delimiter = ',')]
         cache_capacity_rankings: Vec<usize>,
 
-        #[arg(short, long, value_delimiter = ',')]
+        #[arg(short = 'x', long, value_delimiter = ',')]
         start: Option<Vec<usize>>,
 
         #[arg(short, long, default_value_t = usize::MAX)]

@@ -27,6 +27,8 @@ where
         (group.ground_size() * (group.ground_size() + 1)) / 2,
         maxlen,
     );
+    let mut non_unique = 0;
+    let mut r = String::new();
     while curr_length < max_length {
         let node = res.back().unwrap();
         let left_map: Vec<Cycle<V>> = generators
@@ -40,7 +42,7 @@ where
         let total = [&left_map[..], &right_map[..]].concat();
         let mut max_locality = total
             .iter()
-            .filter(|x| locality_calc(x) > locality_calc(node))
+            .filter(|x| x.inversions() == node.inversions() + 1)
             .collect::<Vec<_>>();
         max_locality.sort_unstable_by_key(|a| locality_calc(a));
         max_locality.dedup();
@@ -49,19 +51,25 @@ where
             if max_locality.len() > 1
                 && locality_calc(first) == locality_calc(max_locality.get(1).unwrap())
             {
-                println!("{:?} does not have a unique key!", first.display());
+                non_unique += 1;
+                r.push_str(&format!(
+                    "{:?} does not have a unique key!\n",
+                    first.display()
+                ));
                 max_locality
                     .iter()
                     .filter(|x| locality_calc(x) == locality_calc(first))
-                    .for_each(|x| println!("\tequivalent: {}", x.display()));
+                    .for_each(|x| r.push_str(&format!("\tequivalent: {}\n", x.display())));
             }
             res.push_back(first.clone());
-        } else {
-            break;
         }
-
         curr_length += 1
     }
+
+    println!(
+        "{}\nnon_unique counter: {}\ncurr_length: {}",
+        r, non_unique, curr_length
+    ); //todo: use verbose
 
     res.into_iter().collect()
 }
