@@ -70,7 +70,7 @@ enum Commands {
 
 type LocalityRanker<V, O> = dyn Fn(&Cycle<V>) -> O + Send + Sync;
 fn get_calc<V, O>(
-    calc_enum: LocalityCalculator,
+    calc_enum: &LocalityCalculator,
     rankings: Arc<Vec<usize>>,
 ) -> Box<LocalityRanker<V, O>>
 where
@@ -119,7 +119,7 @@ fn main() {
             let clone = Arc::clone(&cache_capacity_rankings);
             let group = sym(symmetric_n);
             let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
-                get_calc(locality_calculator, clone);
+                get_calc(&locality_calculator, clone);
             let retraversal_header = String::from("\"retraversal\",");
             let ranking_header = cache_capacity_rankings
                 .iter()
@@ -179,13 +179,33 @@ fn main() {
             };
 
             let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
+            let clone = Arc::clone(&cache_capacity_rankings);
             let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
-                get_calc(locality_calculator, cache_capacity_rankings);
+                get_calc(&locality_calculator, cache_capacity_rankings);
             let chain = chain_find(&group, starting, locality_calc, max_length);
-            for retraversal in chain {
-                writeln!(stdout.lock(), "{}", retraversal.display())
-                    .expect("Something went wrong with writing retraversal to output")
-            }
+            let ground = group.get_ground();
+            let locality_calc_2: Box<LocalityRanker<usize, Vec<usize>>> =
+                get_calc(&locality_calculator, clone);
+            let retraversal_iter = chain
+                .par_iter()
+                .map(|x| {
+                    let b = locality_calc_2(x);
+                    let a = ground.iter().map(|y| x.eval(*y));
+                    (a, b)
+                })
+                .map(|(a, b)| {
+                    let retraversal = a.map(|y| y.to_string()).collect::<Vec<String>>().join(",");
+
+                    let locality_str = b
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join(",");
+                    format!("\"{}\",{}", retraversal, locality_str)
+                });
+            let output: String = retraversal_iter.collect::<Vec<String>>().join("\n");
+            writeln!(stdout.lock(), "{}", output)
+                .expect("Something went wrong with writing retraversal to output")
         }
         Commands::Simulate { .. } => todo!(),
     }
