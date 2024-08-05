@@ -8,14 +8,14 @@ use crate::group_theory::group::Group;
 use crate::group_theory::symmetric::SymmetricGroup;
 
 #[allow(unused)]
-fn chain_find<V, F, O>(
+pub fn chain_find<V, F, O>(
     group: &SymmetricGroup<V>,
     start: Cycle<V>,
     locality_calc: F,
     maxlen: usize,
 ) -> Vec<Cycle<V>>
 where
-    V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd,
+    V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + ToString,
     F: Fn(&Cycle<V>) -> O,
     O: PartialOrd + PartialEq + Ord,
 {
@@ -38,15 +38,28 @@ where
             .map(|gen| gen.clone() * node.clone())
             .collect();
         let total = [&left_map[..], &right_map[..]].concat();
-        let max_locality = total
+        let mut max_locality = total
             .iter()
             .filter(|x| locality_calc(x) > locality_calc(node))
-            .max_by(|a, b| locality_calc(a).cmp(&locality_calc(b)));
-        if let Some(u) = max_locality {
-            res.push_back(u.clone());
+            .collect::<Vec<_>>();
+        max_locality.sort_unstable_by_key(|a| locality_calc(a));
+        max_locality.dedup();
+        let max_locality = max_locality;
+        if let Some(&first) = max_locality.first() {
+            if max_locality.len() > 1
+                && locality_calc(first) == locality_calc(max_locality.get(1).unwrap())
+            {
+                println!("{:?} does not have a unique key!", first.display());
+                max_locality
+                    .iter()
+                    .filter(|x| locality_calc(x) == locality_calc(first))
+                    .for_each(|x| println!("\tequivalent: {}", x.display()));
+            }
+            res.push_back(first.clone());
         } else {
             break;
         }
+
         curr_length += 1
     }
 

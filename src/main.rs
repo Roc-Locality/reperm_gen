@@ -5,6 +5,7 @@ use reperm_gen::generator::periodic::PeriodicGen;
 use reperm_gen::group_theory::cycle::Cycle;
 use reperm_gen::group_theory::group::Group;
 use reperm_gen::group_theory::symmetric::sym;
+use reperm_gen::locality::chainfind::chain_find;
 use reperm_gen::locality::reuse::calculate_lru_hits;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -52,8 +53,14 @@ enum Commands {
         #[arg(short, long, value_parser)]
         locality_calculator: LocalityCalculator,
 
-        #[arg(short, long)]
+        #[arg(short, long, value_delimiter = ',')]
+        cache_capacity_rankings: Vec<usize>,
+
+        #[arg(short, long, value_delimiter = ',')]
         start: Option<Vec<usize>>,
+
+        #[arg(short, long, default_value_t = usize::MAX)]
+        max_length: usize,
     },
     Simulate {
         #[arg(short, long, value_parser)]
@@ -151,7 +158,35 @@ fn main() {
             write!(stdout.lock(), "{}\n{}", header, text)
                 .expect("Something went wrong with writing to output")
         }
-        Commands::FindChain { .. } => todo!(),
+        Commands::FindChain {
+            symmetric_n,
+            locality_calculator,
+            cache_capacity_rankings,
+            start,
+            max_length,
+        } => {
+            assert_ne!(
+                cache_capacity_rankings.len(),
+                0,
+                "Expected rankings to not be empty (Supply rankings with non empty elements)"
+            );
+            assert!(cache_capacity_rankings.iter().max().unwrap() <= &symmetric_n);
+            let group = sym(symmetric_n);
+            let starting = if let Some(s) = start {
+                group.create_retraversal(&s)
+            } else {
+                group.identity()
+            };
+
+            let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
+            let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
+                get_calc(locality_calculator, cache_capacity_rankings);
+            let chain = chain_find(&group, starting, locality_calc, max_length);
+            for retraversal in chain {
+                writeln!(stdout.lock(), "{}", retraversal.display())
+                    .expect("Something went wrong with writing retraversal to output")
+            }
+        }
         Commands::Simulate { .. } => todo!(),
     }
     /*
