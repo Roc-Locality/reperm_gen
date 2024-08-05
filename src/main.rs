@@ -41,6 +41,9 @@ enum Commands {
 
         #[arg(short, long, value_delimiter = ',')]
         cache_capacity_rankings: Vec<usize>,
+
+        #[arg(short, long, action = clap::ArgAction::SetTrue, default_value_t = false)]
+        sorted: bool,
     },
     FindChain {
         #[arg(short, long, value_parser)]
@@ -93,6 +96,7 @@ fn main() {
             symmetric_n,
             locality_calculator,
             cache_capacity_rankings,
+            sorted,
         } => {
             assert_ne!(
                 cache_capacity_rankings.len(),
@@ -116,10 +120,14 @@ fn main() {
                 .collect::<Vec<String>>()
                 .join(",");
             let header = retraversal_header + &ranking_header;
-
-            //let mut set = group.get_set().into_iter().collect::<Vec<_>>();
-            //set.sort_unstable_by_key(|cycle| cycle.inversions());
-            let set = group.get_set();
+            let set = if sorted {
+                let mut s = group.get_set().into_iter().collect::<Vec<_>>();
+                s.sort_unstable_by_key(|cycle| cycle.inversions());
+                s
+            } else {
+                group.get_set().into_iter().collect::<Vec<_>>()
+            };
+            //let set = group.get_set();
             let text: String = set
                 .par_iter()
                 .map(|retraversal| (retraversal, locality_calc(retraversal)))
