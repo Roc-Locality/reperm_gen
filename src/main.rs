@@ -179,13 +179,14 @@ fn main() {
             };
 
             let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
-            let clone = Arc::clone(&cache_capacity_rankings);
+            let clone_1 = Arc::clone(&cache_capacity_rankings);
+            let clone_2 = Arc::clone(&cache_capacity_rankings);
             let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
-                get_calc(&locality_calculator, cache_capacity_rankings);
+                get_calc(&locality_calculator, clone_1);
             let chain = chain_find(&group, starting, locality_calc, max_length);
             let ground = group.get_ground();
             let locality_calc_2: Box<LocalityRanker<usize, Vec<usize>>> =
-                get_calc(&locality_calculator, clone);
+                get_calc(&locality_calculator, clone_2);
             let retraversal_iter = chain
                 .par_iter()
                 .map(|x| {
@@ -203,8 +204,15 @@ fn main() {
                         .join(",");
                     format!("\"{}\",{}", retraversal, locality_str)
                 });
+            let retraversal_header = String::from("\"retraversal\",");
+            let ranking_header = cache_capacity_rankings
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+            let header = retraversal_header + &ranking_header;
             let output: String = retraversal_iter.collect::<Vec<String>>().join("\n");
-            writeln!(stdout.lock(), "{}", output)
+            writeln!(stdout.lock(), "{}\n{}", header, output)
                 .expect("Something went wrong with writing retraversal to output")
         }
         Commands::Simulate { .. } => todo!(),
