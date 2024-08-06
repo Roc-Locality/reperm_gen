@@ -73,11 +73,7 @@ where
     }
 
     fn identity(&self) -> Cycle<V> {
-        let mut map = BiMap::new();
-        for g in self.ground.iter() {
-            map.insert(*g, *g);
-        }
-        Cycle::new(map, self.ground.clone())
+        Cycle::from(vec![vec![]], self.ground.clone())
     }
 
     fn inverse(&self, e: Cycle<V>) -> Cycle<V> {

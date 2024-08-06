@@ -1,6 +1,8 @@
 use crate::bimap;
 
 use bimap::BiMap;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{self, Debug};
 use std::hash::Hash;
@@ -123,6 +125,18 @@ where
         Box::new(move |e| m.get_by_left(&e).unwrap().clone())
     }
 
+    pub fn get_retraversal_str(&self) -> String
+    where
+        T: ToString,
+    {
+        self.ground
+            .iter()
+            .map(|y| self.eval(y.clone()))
+            .map(|y| y.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    }
+
     /// This yields the cycle representation, aka (123),(435), etc
     /// If you pass the output to a #from method, you should get the same object.
     /// If show_one is True, then we should also show the full cycle representation (aka, include the 1-cycles)
@@ -165,18 +179,36 @@ where
     where
         T: ToString,
     {
-        self.get_cycle_representation(false).iter()
+        self.get_cycle_representation(false)
+            .iter()
             .map(|cycle| {
-                format!("({})", cycle.iter()
-                    .map(|e| e.to_string())
-                    .collect::<Vec<String>>()
-                    .join(","))
+                format!(
+                    "({})",
+                    cycle
+                        .iter()
+                        .map(|e| e.to_string())
+                        .collect::<Vec<String>>()
+                        .join(",")
+                )
             })
             .collect::<Vec<String>>()
             .join("")
     }
 }
 
+impl<T> Serialize for Cycle<T>
+where
+    T: Clone + Hash + Eq + ToString + Debug,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Start a struct serialization
+        let mut state = serializer.serialize_map(Some(2))?;
+        state.serialize_entry("n", &self.n)?;
+        state.serialize_entry("value", &self.get_retraversal_str())?;
+        state.end()
     }
 }
 
@@ -303,6 +335,21 @@ mod tests {
             f.get_cycle_representation(false),
             vec![vec![1, 5], vec![2, 4]]
         );
+    }
+
+    #[test]
+    fn construction5() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![1, 5], vec![2, 4], vec![3]], ground.clone());
+        let serialized = serde_json::to_string_pretty(&f).unwrap();
+        debug_assert_eq!(serialized, "{\n  \"n\": 5,\n  \"value\": \"5,4,3,2,1\"\n}");
+    }
+
+    #[test]
+    fn construction6() {
+        let ground = vec![1, 2, 3, 4, 5];
+        let f = Cycle::from(vec![vec![]], ground.clone());
+        debug_assert_eq!(&f.get_retraversal_str(), "1,2,3,4,5");
     }
 
     #[test]

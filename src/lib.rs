@@ -25,3 +25,4 @@ pub mod locality {
 
 pub mod macros;
 pub use ::bimap;
+pub use locality::chainfind::chain_find;

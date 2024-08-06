@@ -1,11 +1,24 @@
 use std::cmp::min;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::hash::Hash;
+
+use serde::Serialize;
 
 use crate::group_theory::cycle::Cycle;
 use crate::group_theory::group::Group;
 use crate::group_theory::symmetric::SymmetricGroup;
+
+#[derive(Serialize, Debug)]
+pub struct ChainFindResult<V>
+where
+    V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + ToString + 'static,
+{
+    pub length_non_unique: usize,
+    pub length_chain: usize,
+    pub chain: Vec<Cycle<V>>,
+    pub non_unique_choices: HashMap<String, Vec<Cycle<V>>>,
+}
 
 #[allow(unused)]
 pub fn chain_find<V, F, O>(
@@ -13,7 +26,7 @@ pub fn chain_find<V, F, O>(
     start: Cycle<V>,
     locality_calc: F,
     maxlen: usize,
-) -> Vec<Cycle<V>>
+) -> ChainFindResult<V>
 where
     V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + ToString,
     F: Fn(&Cycle<V>) -> O,
@@ -27,8 +40,8 @@ where
         (group.ground_size() * (group.ground_size() + 1)) / 2,
         maxlen,
     );
+    let mut non_unique_map = HashMap::with_capacity(20);
     let mut non_unique = 0;
-    let mut r = String::new();
     while curr_length < max_length {
         let node = res.back().unwrap();
         let left_map: Vec<Cycle<V>> = generators
@@ -52,26 +65,27 @@ where
                 && locality_calc(first) == locality_calc(max_locality.get(1).unwrap())
             {
                 non_unique += 1;
-                r.push_str(&format!(
-                    "{:?} does not have a unique key!\n",
-                    first.display()
-                ));
+
+                non_unique_map.entry(first.get_retraversal_str()).or_insert_with(Vec::default);
+                let update = non_unique_map
+                    .get_mut(&first.get_retraversal_str())
+                    .unwrap();
                 max_locality
                     .iter()
                     .filter(|x| locality_calc(x) == locality_calc(first))
-                    .for_each(|x| r.push_str(&format!("\tequivalent: {}\n", x.display())));
+                    .for_each(|&x| update.push(x.clone()));
             }
             res.push_back(first.clone());
         }
-        curr_length += 1
+        curr_length += 1;
     }
 
-    println!(
-        "{}\nnon_unique counter: {}\ncurr_length: {}",
-        r, non_unique, curr_length
-    ); //todo: use verbose
-
-    res.into_iter().collect()
+    ChainFindResult {
+        length_non_unique: non_unique,
+        length_chain: curr_length,
+        chain: res.into(),
+        non_unique_choices: non_unique_map,
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +97,7 @@ mod tests {
     use crate::group_theory::cycle::Cycle;
     use crate::group_theory::group::Group;
     use crate::group_theory::symmetric::SymmetricGroup;
-    use crate::locality::chainfind::chain_find;
+    use crate::locality::chainfind::{chain_find, ChainFindResult};
     use crate::locality::reuse::calculate_lru_hits;
 
     #[test]
@@ -102,7 +116,7 @@ mod tests {
             )
         };
         let identity = s_m.identity();
-        let chain: Vec<Cycle<i32>> = chain_find(
+        let ChainFindResult { chain, .. } = chain_find(
             &s_m,
             identity,
             |retraversal| hits_ranking(retraversal),

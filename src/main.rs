@@ -1,15 +1,17 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum, ValueHint};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use reperm_gen::chain_find;
 use reperm_gen::generator::gen::Generator;
 use reperm_gen::generator::periodic::PeriodicGen;
 use reperm_gen::group_theory::cycle::Cycle;
 use reperm_gen::group_theory::group::Group;
 use reperm_gen::group_theory::symmetric::sym;
-use reperm_gen::locality::chainfind::chain_find;
 use reperm_gen::locality::reuse::calculate_lru_hits;
+use serde_json::json;
 use std::fmt::Debug;
+use std::fs::File;
 use std::hash::Hash;
-use std::io::{stdout, Write};
+use std::io::Write;
 use std::sync::Arc;
 use tracing::{event, Level};
 
@@ -43,8 +45,11 @@ enum Commands {
         #[arg(short, long, value_delimiter = ',')]
         cache_capacity_rankings: Vec<usize>,
 
-        #[arg(short, long, action = clap::ArgAction::SetTrue, default_value_t = false)]
+        #[arg(short = 'z', long, action = clap::ArgAction::SetTrue, default_value_t = false)]
         sorted: bool,
+
+        #[arg(short = 'o', long = "output", value_hint = ValueHint::FilePath)]
+        output_file: Option<String>,
     },
     FindChain {
         #[arg(short, long, value_parser)]
@@ -61,6 +66,9 @@ enum Commands {
 
         #[arg(short, long, default_value_t = usize::MAX)]
         max_length: usize,
+
+        #[arg(short = 'o', long = "output", value_hint = ValueHint::FilePath)]
+        output_file: Option<String>,
     },
     Simulate {
         #[arg(short, long, value_parser)]
@@ -94,8 +102,7 @@ where
     Box::new(func)
 }
 
-fn main() {
-    let stdout = stdout();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     event!(Level::INFO, "Initialization has started");
     let cli = Cli::parse();
     match cli.command {
@@ -104,6 +111,7 @@ fn main() {
             locality_calculator,
             cache_capacity_rankings,
             sorted,
+            output_file,
         } => {
             assert_ne!(
                 cache_capacity_rankings.len(),
@@ -115,6 +123,12 @@ fn main() {
                 Level::INFO,
                 "Started trying to plot elements of the symmetric group"
             );
+            let mut file = if let Some(o) = output_file {
+                File::create(o)?
+            } else {
+                File::create("./output")?
+            };
+
             let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
             let clone = Arc::clone(&cache_capacity_rankings);
             let group = sym(symmetric_n);
@@ -144,19 +158,13 @@ fn main() {
                         .map(|x| x.to_string())
                         .collect::<Vec<String>>()
                         .join(",");
-                    let cycle_str: String = retraversal
-                        .get_ground()
-                        .into_iter()
-                        .map(|x| retraversal.eval(x))
-                        .map(|x| x.to_string())
-                        .collect::<Vec<String>>()
-                        .join(",");
+                    let cycle_str: String = retraversal.get_retraversal_str();
 
                     format!("\"{}\",{}\n", cycle_str, locality_str)
                 })
                 .collect();
-            write!(stdout.lock(), "{}\n{}", header, text)
-                .expect("Something went wrong with writing to output")
+            let out = format!("{}\n{}", header, text);
+            file.write_all(out.as_bytes())?
         }
         Commands::FindChain {
             symmetric_n,
@@ -164,6 +172,7 @@ fn main() {
             cache_capacity_rankings,
             start,
             max_length,
+            output_file,
         } => {
             assert_ne!(
                 cache_capacity_rankings.len(),
@@ -171,6 +180,11 @@ fn main() {
                 "Expected rankings to not be empty (Supply rankings with non empty elements)"
             );
             assert!(cache_capacity_rankings.iter().max().unwrap() <= &symmetric_n);
+            let mut file = if let Some(o) = output_file {
+                File::create(o)?
+            } else {
+                File::create("./output")?
+            };
             let group = sym(symmetric_n);
             let starting = if let Some(s) = start {
                 group.create_retraversal(&s)
@@ -183,19 +197,18 @@ fn main() {
             let clone_2 = Arc::clone(&cache_capacity_rankings);
             let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
                 get_calc(&locality_calculator, clone_1);
-            let chain = chain_find(&group, starting, locality_calc, max_length);
-            let ground = group.get_ground();
+            let chain_result = chain_find(&group, starting, locality_calc, max_length);
+            let chain = &chain_result.chain;
             let locality_calc_2: Box<LocalityRanker<usize, Vec<usize>>> =
                 get_calc(&locality_calculator, clone_2);
             let retraversal_iter = chain
                 .par_iter()
                 .map(|x| {
                     let b = locality_calc_2(x);
-                    let a = ground.iter().map(|y| x.eval(*y));
-                    (a, b)
+                    (x, b)
                 })
                 .map(|(a, b)| {
-                    let retraversal = a.map(|y| y.to_string()).collect::<Vec<String>>().join(",");
+                    let retraversal = a.get_retraversal_str();
 
                     let locality_str = b
                         .iter()
@@ -212,8 +225,14 @@ fn main() {
                 .join(",");
             let header = retraversal_header + &ranking_header;
             let output: String = retraversal_iter.collect::<Vec<String>>().join("\n");
-            writeln!(stdout.lock(), "{}\n{}", header, output)
-                .expect("Something went wrong with writing retraversal to output")
+
+            let data = json!({
+                "chain_data": chain_result,
+                "raw_data": format!("{}\n{}", header, output),
+            });
+
+            let serialized = serde_json::to_string_pretty(&data).unwrap();
+            file.write_all(serialized.as_bytes())?;
         }
         Commands::Simulate { .. } => todo!(),
     }
@@ -265,4 +284,5 @@ fn main() {
         .expect("Should have been able to read the simulation number");
     println!("{:?}", generator.simulate(simulation_number));
      */
+    Ok(())
 }
