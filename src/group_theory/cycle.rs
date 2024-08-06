@@ -165,18 +165,18 @@ where
     where
         T: ToString,
     {
-        let mut out = String::from("");
-        for cycle in self.get_cycle_representation(false).into_iter() {
-            out.push('(');
-            for element in cycle {
-                out.push_str(&element.to_string());
-                out.push(',');
-            }
-            out.pop();
+        self.get_cycle_representation(false).iter()
+            .map(|cycle| {
+                format!("({})", cycle.iter()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<String>>()
+                    .join(","))
+            })
+            .collect::<Vec<String>>()
+            .join("")
+    }
+}
 
-            out.push(')');
-        }
-        out
     }
 }
 
