@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::hash::Hash;
 
@@ -30,7 +30,7 @@ pub fn chain_find<V, F, O>(
 where
     V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + ToString,
     F: Fn(&Cycle<V>) -> O,
-    O: PartialOrd + PartialEq + Ord,
+    O: PartialOrd + PartialEq,
 {
     let generators = group.get_generator();
     let mut res = VecDeque::new();
@@ -56,10 +56,8 @@ where
         let mut max_locality = total
             .iter()
             .filter(|x| x.inversions() == node.inversions() + 1)
-            .collect::<Vec<_>>();
-        max_locality.sort_unstable_by_key(|a| locality_calc(a));
-        max_locality.dedup();
-        let max_locality = max_locality;
+            .collect::<HashSet<_>>();
+        let max_locality: Vec<_> = max_locality.iter().cloned().collect();
         if let Some(&first) = max_locality.first() {
             if max_locality.len() > 1
                 && locality_calc(first) == locality_calc(max_locality.get(1).unwrap())

@@ -1,3 +1,4 @@
+use abstract_cache::{CacheSim, ObjIdTraits};
 use clap::{Parser, Subcommand, ValueEnum, ValueHint};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use reperm_gen::chain_find;
@@ -14,6 +15,18 @@ use std::hash::Hash;
 use std::io::Write;
 use std::sync::Arc;
 use tracing::{event, Level};
+
+struct MockCache;
+
+impl<Obj: ObjIdTraits> CacheSim<Obj> for MockCache {
+    fn cache_access(&mut self, _: Obj) -> abstract_cache::AccessResult {
+        todo!()
+    }
+
+    fn set_capacity(&mut self, _: usize) -> &mut Self {
+        todo!()
+    }
+}
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, ValueEnum)]
@@ -82,8 +95,8 @@ fn get_calc<V, O>(
     rankings: Arc<Vec<usize>>,
 ) -> Box<LocalityRanker<V, O>>
 where
-    V: Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + Sync,
-    O: PartialOrd + PartialEq + Ord + std::convert::From<Vec<usize>>,
+    V: ObjIdTraits + Clone + Copy + Hash + Eq + PartialEq + Debug + PartialOrd + Sync,
+    O: PartialOrd + PartialEq + std::convert::From<Vec<f32>>,
 {
     let func = match calc_enum {
         LocalityCalculator::LRU => move |cycle: &Cycle<V>| {
@@ -92,11 +105,19 @@ where
             generator.add(cycle.get_function());
             let simulated = generator.simulate(1);
 
-            rankings
+            let mut v: Vec<f32> = rankings
                 .par_iter()
-                .map(|cs| calculate_lru_hits(&simulated, *cs))
-                .collect::<Vec<usize>>()
-                .into()
+                .map(|cs| calculate_lru_hits(&simulated, *cs) as f32)
+                .collect::<Vec<f32>>()
+                .into();
+            // CODE SMELL!
+            let mock = MockCache {};
+            //let z = 4; //&simulated.len() - 3;
+            let fp = mock.footprint(simulated.into_iter());
+            //let mark = fp.get(z).unwrap();
+            v.extend(fp.iter());
+            // CODE SMELL!
+            v.into()
         },
     };
     Box::new(func)
@@ -132,9 +153,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
             let clone = Arc::clone(&cache_capacity_rankings);
             let group = sym(symmetric_n);
-            let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
+            let locality_calc: Box<LocalityRanker<usize, Vec<f32>>> =
                 get_calc(&locality_calculator, clone);
-            let retraversal_header = String::from("\"retraversal\",");
+            let retraversal_header = String::from("\"inversions\",\"retraversal\",");
             let ranking_header = cache_capacity_rankings
                 .iter()
                 .map(|x| x.to_string())
@@ -158,9 +179,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .map(|x| x.to_string())
                         .collect::<Vec<String>>()
                         .join(",");
-                    let cycle_str: String = retraversal.get_retraversal_str();
-
-                    format!("\"{}\",{}\n", cycle_str, locality_str)
+                    let cycle_str: String= retraversal.get_retraversal_str();
+ 
+                    format!("{},\"{}\",{}\n", retraversal.inversions(), cycle_str, locality_str)
                 })
                 .collect();
             let out = format!("{}\n{}", header, text);
@@ -195,11 +216,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let cache_capacity_rankings = Arc::new(cache_capacity_rankings);
             let clone_1 = Arc::clone(&cache_capacity_rankings);
             let clone_2 = Arc::clone(&cache_capacity_rankings);
-            let locality_calc: Box<LocalityRanker<usize, Vec<usize>>> =
+            let locality_calc: Box<LocalityRanker<usize, Vec<f32>>> =
                 get_calc(&locality_calculator, clone_1);
             let chain_result = chain_find(&group, starting, locality_calc, max_length);
             let chain = &chain_result.chain;
-            let locality_calc_2: Box<LocalityRanker<usize, Vec<usize>>> =
+            let locality_calc_2: Box<LocalityRanker<usize, Vec<f32>>> =
                 get_calc(&locality_calculator, clone_2);
             let retraversal_iter = chain
                 .par_iter()

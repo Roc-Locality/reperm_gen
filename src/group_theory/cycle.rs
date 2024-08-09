@@ -1,5 +1,6 @@
 use crate::bimap;
 
+use abstract_cache::ObjIdTraits;
 use bimap::BiMap;
 use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
@@ -276,6 +277,11 @@ where
         write!(f, "{}", self.display())
     }
 }
+
+impl<V> ObjIdTraits for Cycle<V>
+where 
+    V: Clone + Hash + Eq + Debug + ToString
+{}
 
 /// Tests, mainly associative
 
