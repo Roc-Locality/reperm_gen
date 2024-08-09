@@ -278,10 +278,7 @@ where
     }
 }
 
-impl<V> ObjIdTraits for Cycle<V>
-where 
-    V: Clone + Hash + Eq + Debug + ToString
-{}
+impl<V> ObjIdTraits for Cycle<V> where V: Clone + Hash + Eq + Debug + ToString {}
 
 /// Tests, mainly associative
 

@@ -16,6 +16,7 @@ use std::io::Write;
 use std::sync::Arc;
 use tracing::{event, Level};
 
+#[allow(dead_code)]
 struct MockCache;
 
 impl<Obj: ObjIdTraits> CacheSim<Obj> for MockCache {
@@ -105,11 +106,13 @@ where
             generator.add(cycle.get_function());
             let simulated = generator.simulate(1);
 
-            let mut v: Vec<f32> = rankings
+            //let mut v: Vec<f32> =
+            rankings
                 .par_iter()
                 .map(|cs| calculate_lru_hits(&simulated, *cs) as f32)
                 .collect::<Vec<f32>>()
-                .into();
+                .into()
+            /*
             // CODE SMELL!
             let mock = MockCache {};
             //let z = 4; //&simulated.len() - 3;
@@ -117,7 +120,7 @@ where
             //let mark = fp.get(z).unwrap();
             v.extend(fp.iter());
             // CODE SMELL!
-            v.into()
+            */
         },
     };
     Box::new(func)
@@ -179,9 +182,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .map(|x| x.to_string())
                         .collect::<Vec<String>>()
                         .join(",");
-                    let cycle_str: String= retraversal.get_retraversal_str();
- 
-                    format!("{},\"{}\",{}\n", retraversal.inversions(), cycle_str, locality_str)
+                    let cycle_str: String = retraversal.get_retraversal_str();
+
+                    format!(
+                        "{},\"{}\",{}\n",
+                        retraversal.inversions(),
+                        cycle_str,
+                        locality_str
+                    )
                 })
                 .collect();
             let out = format!("{}\n{}", header, text);

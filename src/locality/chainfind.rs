@@ -64,7 +64,9 @@ where
             {
                 non_unique += 1;
 
-                non_unique_map.entry(first.get_retraversal_str()).or_insert_with(Vec::default);
+                non_unique_map
+                    .entry(first.get_retraversal_str())
+                    .or_insert_with(Vec::default);
                 let update = non_unique_map
                     .get_mut(&first.get_retraversal_str())
                     .unwrap();
